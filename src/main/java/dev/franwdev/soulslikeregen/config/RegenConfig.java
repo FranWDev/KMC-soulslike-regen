@@ -1,4 +1,4 @@
-package dev.kmc.soulslikeregen.config;
+package dev.franwdev.soulslikeregen.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 

@@ -1,4 +1,4 @@
-package dev.kmc.soulslikeregen.capability;
+package dev.franwdev.soulslikeregen.capability;
 
 import javax.annotation.Nonnull;
 

@@ -1,6 +1,6 @@
-package dev.kmc.soulslikeregen.capability;
+package dev.franwdev.soulslikeregen.capability;
 
-import dev.kmc.soulslikeregen.SoulslikeRegen;
+import dev.franwdev.soulslikeregen.SoulslikeRegen;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;

@@ -1,7 +1,8 @@
-package dev.kmc.soulslikeregen.mixin;
+package dev.franwdev.soulslikeregen.mixin;
 
-import dev.kmc.soulslikeregen.capability.RegenCapProvider;
-import dev.kmc.soulslikeregen.feedback.FeedbackHelper;
+import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
+import dev.franwdev.soulslikeregen.feedback.FeedbackHelper;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,13 +40,13 @@ public abstract class MixinFoodData {
 
                 // Throttle the "exhausted" feedback message (send at most once every 5 seconds)
                 if (cap.getExhaustedMessageCooldown() <= 0) {
-                    FeedbackHelper.sendExhaustedFeedback((net.minecraft.server.level.ServerPlayer) tickPlayer);
+                    FeedbackHelper.sendExhaustedFeedback((ServerPlayer) tickPlayer);
                     cap.setExhaustedMessageCooldown(100); // 100 ticks = 5 seconds
                 }
             }
             // If not exhausted, the heal proceeds normally.
             // The fatigue accumulation from the heal is handled in a separate
-            // PlayerTickEvent that detects health changes (plan-6).
+            // PlayerTickEvent that detects health changes.
         });
     }
 }

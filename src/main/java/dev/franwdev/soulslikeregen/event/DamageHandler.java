@@ -1,4 +1,4 @@
-package dev.kmc.soulslikeregen.event;
+package dev.franwdev.soulslikeregen.event;
 
 public class DamageHandler {
     // Stub for Phase 1

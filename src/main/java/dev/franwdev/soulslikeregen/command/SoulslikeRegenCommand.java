@@ -1,10 +1,12 @@
-package dev.kmc.soulslikeregen.command;
+package dev.franwdev.soulslikeregen.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import dev.kmc.soulslikeregen.capability.RegenCapProvider;
+import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
+import dev.franwdev.soulslikeregen.feedback.FeedbackHelper;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 
@@ -31,10 +33,8 @@ public class SoulslikeRegenCommand {
     private static int executeStatus(CommandSourceStack src) {
         if (src.getEntity() instanceof ServerPlayer player) {
             RegenCapProvider.get(player).ifPresent(cap -> {
-                net.minecraft.network.chat.Component bar = dev.kmc.soulslikeregen.feedback.FeedbackHelper.buildStatusBar(cap);
-                player.connection.send(
-                    new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(bar)
-                );
+                Component bar = FeedbackHelper.buildStatusBar(cap);
+                player.connection.send(new ClientboundSetActionBarTextPacket(bar));
             });
         } else {
             src.sendFailure(Component.literal("Only players can execute this command."));

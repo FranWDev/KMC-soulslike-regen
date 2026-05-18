@@ -1,6 +1,6 @@
-package dev.kmc.soulslikeregen.capability;
+package dev.franwdev.soulslikeregen.capability;
 
-import dev.kmc.soulslikeregen.config.RegenConfig;
+import dev.franwdev.soulslikeregen.config.RegenConfig;
 import net.minecraft.nbt.CompoundTag;
 
 public class RegenCap implements IRegenCap {

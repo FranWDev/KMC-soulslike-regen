@@ -1,13 +1,13 @@
-package dev.kmc.soulslikeregen;
+package dev.franwdev.soulslikeregen;
 
-import dev.kmc.soulslikeregen.capability.RegenCapProvider;
-import dev.kmc.soulslikeregen.command.SoulslikeRegenCommand;
-import dev.kmc.soulslikeregen.compat.FTBTeamsCompat;
-import dev.kmc.soulslikeregen.compat.WaystonesCompat;
-import dev.kmc.soulslikeregen.config.RegenConfig;
-import dev.kmc.soulslikeregen.event.DamageHandler;
-import dev.kmc.soulslikeregen.event.PlayerTickHandler;
-import dev.kmc.soulslikeregen.event.ServerEventHandler;
+import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
+import dev.franwdev.soulslikeregen.command.SoulslikeRegenCommand;
+import dev.franwdev.soulslikeregen.compat.FTBTeamsCompat;
+import dev.franwdev.soulslikeregen.compat.WaystonesCompat;
+import dev.franwdev.soulslikeregen.config.RegenConfig;
+import dev.franwdev.soulslikeregen.event.DamageHandler;
+import dev.franwdev.soulslikeregen.event.PlayerTickHandler;
+import dev.franwdev.soulslikeregen.event.ServerEventHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;

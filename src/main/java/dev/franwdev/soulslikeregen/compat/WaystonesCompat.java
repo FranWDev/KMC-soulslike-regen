@@ -1,4 +1,4 @@
-package dev.kmc.soulslikeregen.compat;
+package dev.franwdev.soulslikeregen.compat;
 
 import net.minecraftforge.fml.ModList;
 
