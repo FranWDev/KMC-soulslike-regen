@@ -70,6 +70,26 @@ public class NexusData extends SavedData {
         return false;
     }
 
+    public boolean updateNexusRadius(int id, double radius) {
+        NexusEntry old = nexuses.get(id);
+        if (old != null) {
+            nexuses.put(id, new NexusEntry(id, old.x(), old.y(), old.z(), radius, old.dimension(), old.teamId(), old.teamName()));
+            setDirty();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean updateNexusCoords(int id, double x, double y, double z) {
+        NexusEntry old = nexuses.get(id);
+        if (old != null) {
+            nexuses.put(id, new NexusEntry(id, x, y, z, old.radius(), old.dimension(), old.teamId(), old.teamName()));
+            setDirty();
+            return true;
+        }
+        return false;
+    }
+
     public NexusEntry getNexus(int id) {
         return nexuses.get(id);
     }

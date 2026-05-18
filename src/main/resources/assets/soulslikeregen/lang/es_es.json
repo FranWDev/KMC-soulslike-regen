@@ -26,5 +26,25 @@
   "msg.soulslikeregen.actionbar.exhausted": "⚠ AGOTADO [%s %s/%s] — Busca descanso",
   
   "msg.soulslikeregen.source.waystone": "Piedra de Viaje",
-  "msg.soulslikeregen.source.command": "Comando de Administrador"
+  "msg.soulslikeregen.source.command": "Comando de Administrador",
+  
+  "msg.soulslikeregen.command.nexus.set": "Se ha creado el Nexo de Equipo #%s para el equipo '%s' en las coordenadas [%s, %s, %s] con un radio de %s.",
+  "msg.soulslikeregen.command.nexus.edit_radius": "Se ha actualizado el radio del Nexo #%s a %s.",
+  "msg.soulslikeregen.command.nexus.edit_coords": "Se han actualizado las coordenadas del Nexo #%s a [%s, %s, %s].",
+  "msg.soulslikeregen.command.nexus.remove": "Se ha eliminado el Nexo #%s.",
+  "msg.soulslikeregen.command.nexus.not_found": "No se encontró ningún Nexo con el ID %s.",
+  "msg.soulslikeregen.command.nexus.team_not_found": "No se encontró el equipo '%s'. Por favor, verifica el nombre del equipo.",
+  "msg.soulslikeregen.command.nexus.list_title": "--- Nexos de Equipo (Página %s/%s) ---",
+  "msg.soulslikeregen.command.nexus.list_item": "#%s: Equipo '%s' en [%s, %s, %s] (Radio: %s) en %s",
+  
+  "msg.soulslikeregen.command.inn.set": "Se ha creado la Posada #%s en las coordenadas [%s, %s, %s] con un radio de %s.",
+  "msg.soulslikeregen.command.inn.edit_radius": "Se ha actualizado el radio de la Posada #%s a %s.",
+  "msg.soulslikeregen.command.inn.edit_coords": "Se han actualizado las coordenadas de la Posada #%s a [%s, %s, %s].",
+  "msg.soulslikeregen.command.inn.remove": "Se ha eliminado la Posada #%s.",
+  "msg.soulslikeregen.command.inn.not_found": "No se encontró ninguna Posada con el ID %s.",
+  "msg.soulslikeregen.command.inn.list_title": "--- Posadas (Página %s/%s) ---",
+  "msg.soulslikeregen.command.inn.list_item": "#%s: Coordenadas [%s, %s, %s] (Radio: %s) en %s",
+  
+  "msg.soulslikeregen.command.no_permission": "No tienes permiso para ejecutar este comando.",
+  "msg.soulslikeregen.command.only_player": "Solo los jugadores pueden ejecutar este subcomando."
 }

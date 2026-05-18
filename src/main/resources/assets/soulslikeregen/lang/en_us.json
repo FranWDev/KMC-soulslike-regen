@@ -26,5 +26,25 @@
   "msg.soulslikeregen.actionbar.exhausted": "⚠ EXHAUSTED [%s %s/%s] — Seek rest",
   
   "msg.soulslikeregen.source.waystone": "Waystone",
-  "msg.soulslikeregen.source.command": "Command"
+  "msg.soulslikeregen.source.command": "Command",
+  
+  "msg.soulslikeregen.command.nexus.set": "Set Team Nexus #%s for team '%s' at coordinates [%s, %s, %s] with radius %s.",
+  "msg.soulslikeregen.command.nexus.edit_radius": "Updated Nexus #%s radius to %s.",
+  "msg.soulslikeregen.command.nexus.edit_coords": "Updated Nexus #%s coordinates to [%s, %s, %s].",
+  "msg.soulslikeregen.command.nexus.remove": "Removed Nexus #%s.",
+  "msg.soulslikeregen.command.nexus.not_found": "Nexus with ID %s not found.",
+  "msg.soulslikeregen.command.nexus.team_not_found": "Team '%s' not found. Please verify the party team name.",
+  "msg.soulslikeregen.command.nexus.list_title": "--- Team Nexuses (Page %s/%s) ---",
+  "msg.soulslikeregen.command.nexus.list_item": "#%s: Team '%s' at [%s, %s, %s] (Radius: %s) in %s",
+  
+  "msg.soulslikeregen.command.inn.set": "Set Inn #%s at coordinates [%s, %s, %s] with radius %s.",
+  "msg.soulslikeregen.command.inn.edit_radius": "Updated Inn #%s radius to %s.",
+  "msg.soulslikeregen.command.inn.edit_coords": "Updated Inn #%s coordinates to [%s, %s, %s].",
+  "msg.soulslikeregen.command.inn.remove": "Removed Inn #%s.",
+  "msg.soulslikeregen.command.inn.not_found": "Inn with ID %s not found.",
+  "msg.soulslikeregen.command.inn.list_title": "--- Inns (Page %s/%s) ---",
+  "msg.soulslikeregen.command.inn.list_item": "#%s: Coordinates [%s, %s, %s] (Radius: %s) in %s",
+  
+  "msg.soulslikeregen.command.no_permission": "You do not have permission to execute this command.",
+  "msg.soulslikeregen.command.only_player": "Only players can execute this subcommand."
 }

@@ -69,6 +69,26 @@ public class InnData extends SavedData {
         return false;
     }
 
+    public boolean updateInnRadius(int id, double radius) {
+        InnEntry old = inns.get(id);
+        if (old != null) {
+            inns.put(id, new InnEntry(id, old.x(), old.y(), old.z(), radius, old.dimension()));
+            setDirty();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean updateInnCoords(int id, double x, double y, double z) {
+        InnEntry old = inns.get(id);
+        if (old != null) {
+            inns.put(id, new InnEntry(id, x, y, z, old.radius(), old.dimension()));
+            setDirty();
+            return true;
+        }
+        return false;
+    }
+
     public InnEntry getInn(int id) {
         return inns.get(id);
     }
