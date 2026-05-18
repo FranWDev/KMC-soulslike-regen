@@ -1,0 +1,30 @@
+{
+  "msg.soulslikeregen.exhausted.title": "⚠ Capacity Exhausted",
+  "msg.soulslikeregen.exhausted.subtitle": "Natural healing blocked",
+  "msg.soulslikeregen.exhausted.chat": "Your regeneration capacity is full. Find a resting zone (Nexus, Inn, Campfire, Bed, Waystone) to recover.",
+  
+  "msg.soulslikeregen.nexus.entered": "You are in your team's Nexus. Recovering fatigue...",
+  "msg.soulslikeregen.nexus.left": "You left the Nexus.",
+  
+  "msg.soulslikeregen.inn.warmup": "You are in a resting zone. Fatigue recovery starts in %s seconds.",
+  "msg.soulslikeregen.inn.drain": "Resting zone active. Fatigue recovering...",
+  
+  "msg.soulslikeregen.rest.full.title": "✔ Fully Rested",
+  "msg.soulslikeregen.rest.full.chat": "Your fatigue has been fully cleared at a %s.",
+  
+  "msg.soulslikeregen.level_up.title": "⬆ Level Up!",
+  "msg.soulslikeregen.level_up.subtitle": "Regen capacity: %s → %s half-hearts",
+  "msg.soulslikeregen.level_up.chat": "Reached level %s! Max capacity increased to %s.",
+  
+  "msg.soulslikeregen.bonus.day": "✦ Survived a full day without damage. Fatigue reduced by %s.",
+  "msg.soulslikeregen.bonus.bed": "Rested in a bed. Fatigue reduced by %s.",
+  "msg.soulslikeregen.bonus.campfire": "Campfire rest. Fatigue reduced by %s.",
+  "msg.soulslikeregen.bonus.waystone": "Waystone reached. Fatigue fully cleared.",
+  
+  "msg.soulslikeregen.actionbar.normal": "Regen: [%s %s/%s]",
+  "msg.soulslikeregen.actionbar.level": "Regen: [%s %s/%s] Lv.%s",
+  "msg.soulslikeregen.actionbar.exhausted": "⚠ EXHAUSTED [%s %s/%s] — Seek rest",
+  
+  "msg.soulslikeregen.source.waystone": "Waystone",
+  "msg.soulslikeregen.source.command": "Command"
+}

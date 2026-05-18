@@ -31,25 +31,9 @@ public class SoulslikeRegenCommand {
     private static int executeStatus(CommandSourceStack src) {
         if (src.getEntity() instanceof ServerPlayer player) {
             RegenCapProvider.get(player).ifPresent(cap -> {
-                float fatigue = cap.getCurrentFatigue();
-                float max = cap.getMaxCap();
-                
-                // Construct a simple progress bar
-                int totalBars = 10;
-                int filledBars = Math.round((fatigue / max) * totalBars);
-                filledBars = Math.min(totalBars, Math.max(0, filledBars));
-                
-                StringBuilder bar = new StringBuilder();
-                for (int i = 0; i < totalBars; i++) {
-                    bar.append(i < filledBars ? "█" : "░");
-                }
-                
-                String text = String.format("Regen: [%s %.1f/%.1f]", bar.toString(), fatigue, max);
-                
+                net.minecraft.network.chat.Component bar = dev.kmc.soulslikeregen.feedback.FeedbackHelper.buildStatusBar(cap);
                 player.connection.send(
-                    new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
-                        Component.literal(text).withStyle(net.minecraft.ChatFormatting.AQUA)
-                    )
+                    new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(bar)
                 );
             });
         } else {

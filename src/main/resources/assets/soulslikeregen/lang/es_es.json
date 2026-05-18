@@ -1,0 +1,30 @@
+{
+  "msg.soulslikeregen.exhausted.title": "⚠ Capacidad Agotada",
+  "msg.soulslikeregen.exhausted.subtitle": "Regeneración natural bloqueada",
+  "msg.soulslikeregen.exhausted.chat": "Tu capacidad de regeneración está llena. Busca una zona de descanso (Nexo, Posada, Hoguera, Cama, Piedra de Viaje) para recuperarte.",
+  
+  "msg.soulslikeregen.nexus.entered": "Estás en el Nexo de tu equipo. Recuperando fatiga...",
+  "msg.soulslikeregen.nexus.left": "Has salido del Nexo.",
+  
+  "msg.soulslikeregen.inn.warmup": "Estás en una zona de descanso. La recuperación comenzará en %s segundos.",
+  "msg.soulslikeregen.inn.drain": "Zona de descanso activa. Recuperando fatiga...",
+  
+  "msg.soulslikeregen.rest.full.title": "✔ Completamente Descansado",
+  "msg.soulslikeregen.rest.full.chat": "Tu fatiga se ha limpiado por completo en %s.",
+  
+  "msg.soulslikeregen.level_up.title": "⬆ ¡Subida de Nivel!",
+  "msg.soulslikeregen.level_up.subtitle": "Capacidad de regen: %s → %s medios corazones",
+  "msg.soulslikeregen.level_up.chat": "¡Has alcanzado el nivel %s! La capacidad máxima ha aumentado a %s.",
+  
+  "msg.soulslikeregen.bonus.day": "✦ Has sobrevivido un día entero sin recibir daño. Fatiga reducida en %s.",
+  "msg.soulslikeregen.bonus.bed": "Has descansado en una cama. Fatiga reducida en %s.",
+  "msg.soulslikeregen.bonus.campfire": "Has descansado junto a una hoguera. Fatiga reducida en %s.",
+  "msg.soulslikeregen.bonus.waystone": "Has activado una Piedra de Viaje. Fatiga limpiada por completo.",
+  
+  "msg.soulslikeregen.actionbar.normal": "Regen: [%s %s/%s]",
+  "msg.soulslikeregen.actionbar.level": "Regen: [%s %s/%s] Nv.%s",
+  "msg.soulslikeregen.actionbar.exhausted": "⚠ AGOTADO [%s %s/%s] — Busca descanso",
+  
+  "msg.soulslikeregen.source.waystone": "Piedra de Viaje",
+  "msg.soulslikeregen.source.command": "Comando de Administrador"
+}

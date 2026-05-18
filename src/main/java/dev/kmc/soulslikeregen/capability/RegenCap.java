@@ -20,6 +20,7 @@ public class RegenCap implements IRegenCap {
     private boolean nexoDrainActive = false;
     private int   innWarmupTicks = 0;
     private boolean innDrainActive = false;
+    private float lastKnownHealth = -1.0f;
 
     public RegenCap() {
         // maxCap is set from config at construction time.
@@ -68,6 +69,9 @@ public class RegenCap implements IRegenCap {
 
     @Override public boolean isInnDrainActive() { return innDrainActive; }
     @Override public void setInnDrainActive(boolean active) { innDrainActive = active; }
+
+    @Override public float getLastKnownHealth() { return lastKnownHealth; }
+    @Override public void setLastKnownHealth(float health) { lastKnownHealth = health; }
 
     // ── NBT Persistence ──────────────────────────────────────────────────────
 

@@ -43,6 +43,9 @@ public interface IRegenCap {
     boolean isInnDrainActive();
     void setInnDrainActive(boolean active);
 
+    float getLastKnownHealth();
+    void setLastKnownHealth(float health);
+
     /** Returns true when currentFatigue >= maxCap (healing is blocked). */
     default boolean isExhausted() {
         return getCurrentFatigue() >= getMaxCap();
