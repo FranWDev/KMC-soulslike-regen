@@ -1,0 +1,30 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="soulslikeregen"
+version="${file.jarVersion}"
+displayName="KMC Soulslike Regen"
+description="Replaces vanilla regeneration with a Soulslike fatigue system."
+
+[[dependencies.soulslikeregen]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.soulslikeregen]]
+    modId="ftbteams"
+    mandatory=false
+    versionRange="[2001,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.soulslikeregen]]
+    modId="waystones"
+    mandatory=false
+    versionRange="[14,)"
+    ordering="BEFORE"
+    side="BOTH"

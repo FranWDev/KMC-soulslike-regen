@@ -1,0 +1,67 @@
+plugins {
+    id 'net.minecraftforge.gradle' version '6.0.+'
+    id 'org.spongepowered.mixin' version '0.7.+'
+}
+
+apply plugin: 'java'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+
+    runs {
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                soulslikeregen { source sourceSets.main }
+            }
+        }
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                soulslikeregen { source sourceSets.main }
+            }
+        }
+    }
+}
+
+repositories {
+    maven { url 'https://maven.minecraftforge.net' }
+    maven { url 'https://maven.architectury.dev/' }
+    maven { url 'https://maven.ftb.dev/releases' }
+    maven { url 'https://maven.saps.dev/minecraft' }
+    maven { url 'https://maven.twelveiterations.com/repository/maven-public/' }
+    maven { url 'https://maven.blamejared.com' }
+    maven { url 'https://modmaven.dev' }
+    maven { url 'https://api.modrinth.com/maven' }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // Optional: FTB Teams
+    compileOnly fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftbteams_version}")
+
+    // Optional: Waystones (depends on Balm)
+    compileOnly fg.deobf("maven.modrinth:balm:${balm_version}")
+    compileOnly fg.deobf("maven.modrinth:waystones:${waystones_version}")
+}
+
+jar {
+    manifest {
+        attributes([
+            'Specification-Title'   : mod_id,
+            'Implementation-Title'  : mod_id,
+            'Implementation-Version': version,
+            'MixinConfigs'          : 'soulslikeregen.mixins.json'
+        ])
+    }
+}
+
+mixin {
+    add sourceSets.main, 'soulslikeregen.refmap.json'
+    config 'soulslikeregen.mixins.json'
+}
