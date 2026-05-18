@@ -7,6 +7,13 @@ apply plugin: 'java'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
+sourceSets {
+    test {
+        java { srcDir 'src/test/java' }
+        resources { srcDir 'src/test/resources' }
+    }
+}
+
 minecraft {
     mappings channel: 'official', version: minecraft_version
 
@@ -23,6 +30,18 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
             mods {
                 soulslikeregen { source sourceSets.main }
+            }
+        }
+        gameTestServer {
+            workingDirectory project.file('run-gametest')
+            property 'forge.logging.console.level', 'debug'
+            property 'forge.enabledGameTestNamespaces', 'soulslikeregen'
+            property 'soulslikeregen.testMode', 'true'
+            mods {
+                soulslikeregen {
+                    source sourceSets.main
+                    source sourceSets.test
+                }
             }
         }
     }
@@ -48,6 +67,10 @@ dependencies {
     // Optional: Waystones (depends on Balm)
     compileOnly fg.deobf("maven.modrinth:balm:${balm_version}")
     compileOnly fg.deobf("maven.modrinth:waystones:${waystones_version}")
+
+    // Test dependencies
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testCompileOnly fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftbteams_version}")
 }
 
 jar {
@@ -59,9 +82,29 @@ jar {
             'MixinConfigs'          : 'soulslikeregen.mixins.json'
         ])
     }
+    exclude 'dev/franwdev/soulslikeregen/gametest/**'
+    exclude 'dev/franwdev/soulslikeregen/unit/**'
 }
 
 mixin {
     add sourceSets.main, 'soulslikeregen.refmap.json'
     config 'soulslikeregen.mixins.json'
+}
+
+test {
+    useJUnitPlatform()
+    exclude '**/gametest/**'
+}
+
+processTestResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+tasks.register('copyGameTestStructures', Copy) {
+    from file('gameteststructures')
+    into file('run-gametest/gameteststructures')
+}
+
+tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+    dependsOn tasks.named('copyGameTestStructures')
 }

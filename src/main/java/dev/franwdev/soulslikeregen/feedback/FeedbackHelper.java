@@ -2,6 +2,7 @@ package dev.franwdev.soulslikeregen.feedback;
 
 import dev.franwdev.soulslikeregen.capability.IRegenCap;
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
@@ -13,6 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 public class FeedbackHelper {
 
     private static final int BAR_LENGTH = 10;
+    private static final boolean TEST_MODE = Boolean.getBoolean("soulslikeregen.testMode");
 
     // ── Action Bar ───────────────────────────────────────────────────────────
 
@@ -25,6 +27,9 @@ public class FeedbackHelper {
     }
 
     public static void sendActionBar(ServerPlayer player, Component msg) {
+        if (!canSend(player)) {
+            return;
+        }
         player.connection.send(new ClientboundSetActionBarTextPacket(msg));
     }
 
@@ -61,11 +66,29 @@ public class FeedbackHelper {
     // ── Title ────────────────────────────────────────────────────────────────
 
     private static void sendTitle(ServerPlayer player, Component title, Component subtitle) {
+        if (!canSend(player)) {
+            return;
+        }
         player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 40, 10));
         player.connection.send(new ClientboundSetTitleTextPacket(title));
         if (subtitle != null) {
             player.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
         }
+    }
+
+    private static void sendChat(ServerPlayer player, Component msg) {
+        if (!canSend(player)) {
+            return;
+        }
+        player.sendSystemMessage(msg);
+    }
+
+    private static boolean canSend(ServerPlayer player) {
+        if (TEST_MODE || player == null || player.connection == null) {
+            return false;
+        }
+        Connection connection = player.connection.connection;
+        return connection != null && connection.channel() != null;
     }
 
     // ── Specific event messages ──────────────────────────────────────────────
@@ -75,23 +98,23 @@ public class FeedbackHelper {
             Component.translatable("msg.soulslikeregen.exhausted.title").withStyle(ChatFormatting.RED),
             Component.translatable("msg.soulslikeregen.exhausted.subtitle").withStyle(ChatFormatting.GRAY)
         );
-        player.sendSystemMessage(formatPrefix(Component.translatable("msg.soulslikeregen.exhausted.chat"), ChatFormatting.RED));
+        sendChat(player, formatPrefix(Component.translatable("msg.soulslikeregen.exhausted.chat"), ChatFormatting.RED));
     }
 
     public static void sendEnteredNexus(ServerPlayer player) {
-        player.sendSystemMessage(formatPrefix(Component.translatable("msg.soulslikeregen.nexus.entered"), ChatFormatting.GREEN));
+        sendChat(player, formatPrefix(Component.translatable("msg.soulslikeregen.nexus.entered"), ChatFormatting.GREEN));
     }
 
     public static void sendLeftNexus(ServerPlayer player) {
-        player.sendSystemMessage(formatPrefix(Component.translatable("msg.soulslikeregen.nexus.left"), ChatFormatting.GRAY));
+        sendChat(player, formatPrefix(Component.translatable("msg.soulslikeregen.nexus.left"), ChatFormatting.GRAY));
     }
 
     public static void sendInnWarmupStarted(ServerPlayer player, int warmupSeconds) {
-        player.sendSystemMessage(formatPrefix(Component.translatable("msg.soulslikeregen.inn.warmup", String.valueOf(warmupSeconds)), ChatFormatting.YELLOW));
+        sendChat(player, formatPrefix(Component.translatable("msg.soulslikeregen.inn.warmup", String.valueOf(warmupSeconds)), ChatFormatting.YELLOW));
     }
 
     public static void sendInnDrainStarted(ServerPlayer player) {
-        player.sendSystemMessage(formatPrefix(Component.translatable("msg.soulslikeregen.inn.drain"), ChatFormatting.GREEN));
+        sendChat(player, formatPrefix(Component.translatable("msg.soulslikeregen.inn.drain"), ChatFormatting.GREEN));
     }
 
     public static void sendFullyRested(ServerPlayer player, Component source) {
@@ -99,7 +122,7 @@ public class FeedbackHelper {
             Component.translatable("msg.soulslikeregen.rest.full.title").withStyle(ChatFormatting.GREEN),
             null
         );
-        player.sendSystemMessage(formatPrefix(Component.translatable("msg.soulslikeregen.rest.full.chat", source), ChatFormatting.GREEN));
+        sendChat(player, formatPrefix(Component.translatable("msg.soulslikeregen.rest.full.chat", source), ChatFormatting.GREEN));
     }
 
     public static void sendLevelUp(ServerPlayer player, int newLevel, float newMaxCap, float increase) {
@@ -111,23 +134,23 @@ public class FeedbackHelper {
             Component.translatable("msg.soulslikeregen.level_up.subtitle", String.valueOf(oldMaxCap), String.valueOf(maxCapInt))
                 .withStyle(ChatFormatting.YELLOW)
         );
-        player.sendSystemMessage(formatPrefix(Component.translatable("msg.soulslikeregen.level_up.chat", String.valueOf(newLevel), String.valueOf(maxCapInt)), ChatFormatting.GOLD));
+        sendChat(player, formatPrefix(Component.translatable("msg.soulslikeregen.level_up.chat", String.valueOf(newLevel), String.valueOf(maxCapInt)), ChatFormatting.GOLD));
     }
 
     public static void sendDayBonus(ServerPlayer player, float drained) {
-        player.sendSystemMessage(formatPrefix(Component.translatable("msg.soulslikeregen.bonus.day", String.valueOf((int)Math.round(drained))), ChatFormatting.AQUA));
+        sendChat(player, formatPrefix(Component.translatable("msg.soulslikeregen.bonus.day", String.valueOf((int)Math.round(drained))), ChatFormatting.AQUA));
     }
 
     public static void sendBedRest(ServerPlayer player, float drained) {
-        player.sendSystemMessage(formatPrefix(Component.translatable("msg.soulslikeregen.bonus.bed", String.valueOf((int)Math.round(drained))), ChatFormatting.GREEN));
+        sendChat(player, formatPrefix(Component.translatable("msg.soulslikeregen.bonus.bed", String.valueOf((int)Math.round(drained))), ChatFormatting.GREEN));
     }
 
     public static void sendCampfireRest(ServerPlayer player, float drained) {
-        player.sendSystemMessage(formatPrefix(Component.translatable("msg.soulslikeregen.bonus.campfire", String.valueOf((int)Math.round(drained))), ChatFormatting.GREEN));
+        sendChat(player, formatPrefix(Component.translatable("msg.soulslikeregen.bonus.campfire", String.valueOf((int)Math.round(drained))), ChatFormatting.GREEN));
     }
 
     public static void sendWaystoneReset(ServerPlayer player) {
-        player.sendSystemMessage(formatPrefix(Component.translatable("msg.soulslikeregen.bonus.waystone"), ChatFormatting.AQUA));
+        sendChat(player, formatPrefix(Component.translatable("msg.soulslikeregen.bonus.waystone"), ChatFormatting.AQUA));
     }
     
     private static Component formatPrefix(MutableComponent component, ChatFormatting color) {

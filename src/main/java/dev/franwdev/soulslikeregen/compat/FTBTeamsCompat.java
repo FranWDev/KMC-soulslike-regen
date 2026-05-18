@@ -11,9 +11,11 @@ public class FTBTeamsCompat {
 
     private static final String MOD_ID = "ftbteams";
     private static final boolean LOADED = ModList.get().isLoaded(MOD_ID);
+    private static final boolean TEST_MODE = Boolean.getBoolean("soulslikeregen.testMode");
+    private static final String TEST_STUB_CLASS = "dev.franwdev.soulslikeregen.gametest.TestDataStub";
 
     public static boolean isLoaded() {
-        return LOADED;
+        return LOADED || TEST_MODE;
     }
 
     public static void init() {
@@ -26,6 +28,10 @@ public class FTBTeamsCompat {
     }
 
     public static UUID getPlayerTeamId(ServerPlayer player) {
+        if (TEST_MODE) {
+            Optional<UUID> testTeam = invokeTestUuid("getTeamId", UUID.class, player.getUUID());
+            return testTeam.orElse(null);
+        }
         if (!LOADED) return null;
         try {
             Object api = getApi();
@@ -48,6 +54,10 @@ public class FTBTeamsCompat {
     }
 
     public static UUID getTeamIdByName(String name) {
+        if (TEST_MODE) {
+            Optional<UUID> testTeam = invokeTestUuid("getTeamIdByName", String.class, name);
+            return testTeam.orElse(null);
+        }
         if (!LOADED) return null;
         try {
             Object api = getApi();
@@ -74,7 +84,14 @@ public class FTBTeamsCompat {
     }
 
     public static String getTeamName(UUID teamId) {
-        if (!LOADED || teamId == null) {
+        if (teamId == null) {
+            return "Unknown";
+        }
+        if (TEST_MODE) {
+            Optional<String> testName = invokeTestString("getTeamName", UUID.class, teamId);
+            return testName.orElse("Unknown");
+        }
+        if (!LOADED) {
             return "Unknown";
         }
         try {
@@ -95,6 +112,11 @@ public class FTBTeamsCompat {
     }
 
     public static boolean arePlayersAllies(ServerPlayer player1, ServerPlayer player2) {
+        if (TEST_MODE) {
+            UUID teamId1 = getPlayerTeamId(player1);
+            UUID teamId2 = getPlayerTeamId(player2);
+            return teamId1 != null && teamId1.equals(teamId2);
+        }
         if (!LOADED) return false;
         try {
             UUID teamId1 = getPlayerTeamId(player1);
@@ -104,5 +126,35 @@ public class FTBTeamsCompat {
             // Guard
         }
         return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Optional<UUID> invokeTestUuid(String methodName, Class<?> paramType, Object arg) {
+        try {
+            Class<?> stubClass = Class.forName(TEST_STUB_CLASS);
+            Method method = stubClass.getMethod(methodName, paramType);
+            Object result = method.invoke(null, arg);
+            if (result instanceof Optional<?>) {
+                return (Optional<UUID>) result;
+            }
+        } catch (Throwable e) {
+            // Guard
+        }
+        return Optional.empty();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Optional<String> invokeTestString(String methodName, Class<?> paramType, Object arg) {
+        try {
+            Class<?> stubClass = Class.forName(TEST_STUB_CLASS);
+            Method method = stubClass.getMethod(methodName, paramType);
+            Object result = method.invoke(null, arg);
+            if (result instanceof Optional<?>) {
+                return (Optional<String>) result;
+            }
+        } catch (Throwable e) {
+            // Guard
+        }
+        return Optional.empty();
     }
 }

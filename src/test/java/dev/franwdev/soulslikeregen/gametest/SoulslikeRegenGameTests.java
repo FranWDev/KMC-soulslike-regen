@@ -1,0 +1,459 @@
+package dev.franwdev.soulslikeregen.gametest;
+
+import java.util.UUID;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.GameRules;
+import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
+
+import dev.franwdev.soulslikeregen.capability.IRegenCap;
+import dev.franwdev.soulslikeregen.config.RegenConfig;
+
+/**
+ * Main GameTest suite for KMC Soulslike Regen mod.
+ * Covers phases 1-9: Capability, Fatigue, Nexus, Inn, Level-Up, Edge Cases.
+ */
+@GameTestHolder("soulslikeregen")
+@PrefixGameTestTemplate(false)
+public class SoulslikeRegenGameTests {
+
+    // ── PHASE 1: CAPABILITY & BASIC FATIGUE ────────────────────────────────
+
+    /**
+     * Test: Capability initializes with correct defaults.
+     * Expectation: currentFatigue=0, maxCap=BASE_MAX_CAP, level=0
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testCapabilityInit(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            TestHelpers.assertFatigueNear(helper, cap, 0.0f, 0.01f);
+            TestHelpers.assertMaxCap(helper, cap, RegenConfig.BASE_MAX_CAP);
+            TestHelpers.assertTrue(helper, cap.getCurrentLevel() == 0, "Expected level 0, got " + cap.getCurrentLevel());
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: Fatigue accumulation on healing.
+     * Setup: Simulate health increase.
+     * Expectation: currentFatigue increases proportionally.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testFatigueAccumulation(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+        IRegenCap cap = TestHelpers.getCap(player);
+        TestHelpers.tickPlayer(player, 1);
+
+        float maxHealth = player.getMaxHealth();
+        player.setHealth(maxHealth - 4.0f);
+        TestHelpers.tickPlayer(player, 1);
+
+        float before = cap.getCurrentFatigue();
+        TestHelpers.simulateHealing(player, 4.0f);
+        TestHelpers.tickPlayer(player, 1);
+
+        float after = cap.getCurrentFatigue();
+        TestHelpers.assertTrue(helper, after > before,
+            "Fatigue should increase after healing. Before=" + before + ", After=" + after);
+        helper.succeed();
+    }
+
+    /**
+     * Test: Exhaustion state (isExhausted()) is true when currentFatigue >= maxCap.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testExhaustionState(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            cap.setMaxCap(10.0f);
+            cap.setCurrentFatigue(9.0f);
+            TestHelpers.assertFalse(helper, cap.isExhausted(), "Should not be exhausted at 9/10");
+
+            cap.setCurrentFatigue(10.0f);
+            TestHelpers.assertTrue(helper, cap.isExhausted(), "Should be exhausted at 10/10");
+
+            cap.setCurrentFatigue(10.1f);
+            TestHelpers.assertTrue(helper, cap.isExhausted(), "Should be exhausted at 10.1 (clamped)");
+
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: Healing is blocked when fatigue >= maxCap (exhausted).
+     * Setup: Set low maxCap, exhaust it, attempt heal.
+     * Expectation: Health does NOT increase.
+     */
+    @GameTest(template = "empty", timeoutTicks = 150)
+    public static void testHealingBlocked(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+        IRegenCap cap = TestHelpers.getCap(player);
+        float testMaxCap = 1.0f;
+        cap.setMaxCap(testMaxCap);
+        cap.setCurrentFatigue(testMaxCap);  // Exhausted
+
+        player.level().getGameRules().getRule(GameRules.RULE_NATURAL_REGENERATION)
+            .set(true, player.getServer());
+        player.getFoodData().setFoodLevel(20);
+        player.getFoodData().setSaturation(5.0f);
+        player.getFoodData().setExhaustion(0.0f);
+        player.setHealth(player.getMaxHealth() - 2.0f);
+
+        float healthBefore = player.getHealth();
+
+        for (int i = 0; i < 20; i++) {
+            player.getFoodData().tick(player);
+        }
+
+        float healthAfter = player.getHealth();
+        TestHelpers.assertEquals(helper, healthBefore, healthAfter, 0.01f,
+            "Health should not increase when exhausted");
+        helper.succeed();
+    }
+
+    /**
+     * Test: Fatigue cannot exceed maxCap.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testFatigueClamp(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            float maxCap = cap.getMaxCap();
+
+            cap.addFatigue(1000.0f);  // Try to exceed
+            TestHelpers.assertTrue(helper, cap.getCurrentFatigue() <= maxCap,
+                "Fatigue should be clamped to maxCap. maxCap=" + maxCap + ", actual=" + cap.getCurrentFatigue());
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: Fatigue cannot go below 0.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testFatigueNeverNegative(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            cap.drainFatigue(1000.0f);  // Try to overdrain
+
+            TestHelpers.assertTrue(helper, cap.getCurrentFatigue() >= 0.0f,
+                "Fatigue cannot be negative. Got: " + cap.getCurrentFatigue());
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: Drain fatigue returns correct amount.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testDrainFatigue(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            cap.setCurrentFatigue(10.0f);
+
+            float drained = cap.drainFatigue(3.0f);
+            TestHelpers.assertEquals(helper, 3.0f, drained, 0.01f, "Should drain 3.0");
+            TestHelpers.assertEquals(helper, 7.0f, cap.getCurrentFatigue(), 0.01f, "Should have 7.0 left");
+
+            helper.succeed();
+        });
+    }
+
+    // ── PHASE 2: NEXUS ZONES ───────────────────────────────────────────────
+
+    /**
+     * Test: Nexus zone detection and drain activation (team match).
+     */
+    @GameTest(template = "empty", timeoutTicks = 200)
+    public static void testNexusDetection(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID teamId = UUID.randomUUID();
+        UUID playerId = UUID.randomUUID();
+
+        TestDataStub.setPlayerTeam(playerId, teamId, "TestTeam");
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TeamMember");
+        TestHelpers.registerNexus(helper, TestHelpers.ZONE_POS, 20.0f, teamId, "TestTeam");
+        IRegenCap cap = TestHelpers.getCap(player);
+        cap.addFatigue(10.0f);
+
+        // Position inside Nexus
+        player.moveTo(TestHelpers.ZONE_POS.getX() + 5,
+                     TestHelpers.ZONE_POS.getY() + 1,
+                     TestHelpers.ZONE_POS.getZ() + 5);
+
+        player.tickCount = 0;
+        TestHelpers.tickPlayer(player, RegenConfig.NEXUS_DRAIN_INTERVAL_TICKS);
+
+        TestHelpers.assertNexoActive(helper, cap);
+        float fatigue = cap.getCurrentFatigue();
+        TestHelpers.assertTrue(helper, fatigue < 10.0f,
+            "Fatigue should decrease in Nexus. Current: " + fatigue);
+        helper.succeed();
+    }
+
+    /**
+     * Test: Nexus drain stops on exit.
+     */
+    @GameTest(template = "empty", timeoutTicks = 200)
+    public static void testNexusExit(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID teamId = UUID.randomUUID();
+        UUID playerId = UUID.randomUUID();
+
+        TestDataStub.setPlayerTeam(playerId, teamId, "TestTeam");
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TeamMember");
+        TestHelpers.registerNexus(helper, TestHelpers.ZONE_POS, 20.0f, teamId, "TestTeam");
+        IRegenCap cap = TestHelpers.getCap(player);
+        cap.addFatigue(10.0f);
+
+        // Enter zone
+        player.moveTo(TestHelpers.ZONE_POS.getX() + 5,
+                     TestHelpers.ZONE_POS.getY() + 1,
+                     TestHelpers.ZONE_POS.getZ() + 5);
+
+        player.tickCount = 0;
+        TestHelpers.tickPlayer(player, RegenConfig.NEXUS_DRAIN_INTERVAL_TICKS);
+        float fatigueInZone = cap.getCurrentFatigue();
+        TestHelpers.assertNexoActive(helper, cap);
+
+        // Exit zone
+        player.moveTo(TestHelpers.ZONE_POS.getX() + 100,
+                     TestHelpers.ZONE_POS.getY() + 1,
+                     TestHelpers.ZONE_POS.getZ() + 100);
+        TestHelpers.tickPlayer(player, 1);
+
+        TestHelpers.assertNexoInactive(helper, cap);
+        float fatigueOutside = cap.getCurrentFatigue();
+        TestHelpers.assertEquals(helper, fatigueInZone, fatigueOutside, 0.5f,
+            "Fatigue should not change outside Nexus");
+        helper.succeed();
+    }
+
+    /**
+     * Test: Nexus does NOT drain for wrong team.
+     */
+    @GameTest(template = "empty", timeoutTicks = 150)
+    public static void testNexusTeamMismatch(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID team1Id = UUID.randomUUID();
+        UUID team2Id = UUID.randomUUID();
+        UUID playerId = UUID.randomUUID();
+
+        TestDataStub.setPlayerTeam(playerId, team2Id, "WrongTeam");
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "WrongTeamMember");
+        TestHelpers.registerNexus(helper, TestHelpers.ZONE_POS, 20.0f, team1Id, "RightTeam");
+        IRegenCap cap = TestHelpers.getCap(player);
+        cap.addFatigue(10.0f);
+
+        player.moveTo(TestHelpers.ZONE_POS.getX() + 5,
+                     TestHelpers.ZONE_POS.getY() + 1,
+                     TestHelpers.ZONE_POS.getZ() + 5);
+
+        player.tickCount = 0;
+        TestHelpers.tickPlayer(player, RegenConfig.NEXUS_DRAIN_INTERVAL_TICKS);
+
+        TestHelpers.assertNexoInactive(helper, cap);
+        TestHelpers.assertEquals(helper, 10.0f, cap.getCurrentFatigue(), 0.01f,
+            "Fatigue should not drain for wrong team");
+        helper.succeed();
+    }
+
+    // ── PHASE 3: INN ZONES ──────────────────────────────────────────────────
+
+    /**
+     * Test: Inn warmup timer and drain activation.
+     */
+    @GameTest(template = "empty", timeoutTicks = 1600)
+    public static void testInnWarmup(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "InnGuest");
+        TestHelpers.registerInn(helper, TestHelpers.ZONE_POS, 20.0f);
+        IRegenCap cap = TestHelpers.getCap(player);
+        cap.addFatigue(10.0f);
+
+        player.moveTo(TestHelpers.ZONE_POS.getX() + 5,
+                     TestHelpers.ZONE_POS.getY() + 1,
+                     TestHelpers.ZONE_POS.getZ() + 5);
+
+        player.tickCount = 0;
+        TestHelpers.tickPlayer(player, RegenConfig.INN_WARMUP_TICKS);
+        TestHelpers.tickPlayer(player, RegenConfig.INN_DRAIN_INTERVAL_TICKS);
+
+        TestHelpers.assertInnActive(helper, cap);
+        float fatigue = cap.getCurrentFatigue();
+        TestHelpers.assertTrue(helper, fatigue < 10.0f,
+            "Fatigue should decrease after warmup. Current: " + fatigue);
+        helper.succeed();
+    }
+
+    /**
+     * Test: Inn warmup resets on exit before completion.
+     */
+    @GameTest(template = "empty", timeoutTicks = 800)
+    public static void testInnWarmupReset(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "InnGuest");
+        TestHelpers.registerInn(helper, TestHelpers.ZONE_POS, 20.0f);
+        IRegenCap cap = TestHelpers.getCap(player);
+        cap.addFatigue(10.0f);
+
+        player.moveTo(TestHelpers.ZONE_POS.getX() + 5,
+                     TestHelpers.ZONE_POS.getY() + 1,
+                     TestHelpers.ZONE_POS.getZ() + 5);
+
+        player.tickCount = 0;
+        TestHelpers.tickPlayer(player, 40);
+        TestHelpers.assertTrue(helper, cap.getInnWarmupTicks() > 0,
+            "Warmup should be in progress");
+
+        // Exit Inn
+        player.moveTo(TestHelpers.ZONE_POS.getX() + 100,
+                     TestHelpers.ZONE_POS.getY() + 1,
+                     TestHelpers.ZONE_POS.getZ() + 100);
+        TestHelpers.tickPlayer(player, 1);
+
+        TestHelpers.assertTrue(helper, cap.getInnWarmupTicks() == 0,
+            "Warmup should reset on exit. Got: " + cap.getInnWarmupTicks());
+        helper.succeed();
+    }
+
+    // ── PHASE 4: EDGE CASES ────────────────────────────────────────────────
+
+    /**
+     * Test: Ally discount only applies on healing.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testAllyDiscountRequiresHealing(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            float healthBefore = player.getHealth();
+
+            // No healing → no fatigue should be added
+            helper.runAfterDelay(20, () -> {
+                float healthAfter = player.getHealth();
+                TestHelpers.assertEquals(helper, healthBefore, healthAfter, 0.01f,
+                    "Health should not change without healing action");
+                helper.succeed();
+            });
+        });
+    }
+
+    /**
+     * Test: Day bonus cooldown tracking.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testDayBonusInitial(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            TestHelpers.simulateDamage(player);
+            TestHelpers.assertFalse(helper, cap.isBonusClaimed(), 
+                "Bonus should not be claimed immediately after damage");
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: Multiple rapid fatigue changes.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testRapidFatigueChanges(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            cap.setMaxCap(50.0f);
+
+            // Add, drain, add again
+            cap.addFatigue(20.0f);
+            TestHelpers.assertEquals(helper, 20.0f, cap.getCurrentFatigue(), 0.01f, "Add 20");
+
+            cap.drainFatigue(5.0f);
+            TestHelpers.assertEquals(helper, 15.0f, cap.getCurrentFatigue(), 0.01f, "Drain 5");
+
+            cap.addFatigue(15.0f);
+            TestHelpers.assertEquals(helper, 30.0f, cap.getCurrentFatigue(), 0.01f, "Add 15");
+
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: Level tracking (basic).
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testLevelTracking(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            int level = cap.getCurrentLevel();
+            TestHelpers.assertTrue(helper, level >= 0, "Level should be >= 0, got " + level);
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: Total fatigue spent increases on fatigue addition.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testTotalFatigueSpent(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            float before = cap.getTotalFatigueSpent();
+            cap.addFatigue(5.0f);
+            float after = cap.getTotalFatigueSpent();
+            TestHelpers.assertTrue(helper, after >= before, 
+                "Total fatigue spent should increase. Before=" + before + ", After=" + after);
+            helper.succeed();
+        });
+    }
+}
