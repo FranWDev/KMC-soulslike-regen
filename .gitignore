@@ -20,5 +20,27 @@ gradle-app.setting
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 
-agent
+# IDE (IntelliJ IDEA, VS Code, etc.)
+.idea/
+*.iml
+.vscode/
+
+# Editor temp files
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Mod development
+run/
+out/
+
+# Project planning (documentation only)
+agent/
 AGENTS.md
+logs
+run-gametest
+bin

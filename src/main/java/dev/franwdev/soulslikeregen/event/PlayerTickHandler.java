@@ -201,9 +201,18 @@ public class PlayerTickHandler {
                     cap.setLastDamageTick(level.getGameTime());
                 }
 
-                // 7. Subtle status updates on Action bar every 5 seconds (100 ticks)
-                if (player.tickCount % 100 == 0) {
-                    FeedbackHelper.sendStatusActionBar(player, cap);
+                // 7. Action Bar: Send persistent bar if admin enabled it, or subtle updates when exhausted
+                if (cap.isActionBarEnabled()) {
+                    // Persistent bar: send every 10 ticks (2 Hz) to keep it visible
+                    if (player.tickCount % 10 == 0) {
+                        Component bar = FeedbackHelper.buildStatusBar(cap);
+                        FeedbackHelper.sendActionBar(player, bar);
+                    }
+                } else {
+                    // Default: subtle updates only when exhausted, every 5 seconds
+                    if (cap.isExhausted() && player.tickCount % 100 == 0) {
+                        FeedbackHelper.sendStatusActionBar(player, cap);
+                    }
                 }
             });
         }

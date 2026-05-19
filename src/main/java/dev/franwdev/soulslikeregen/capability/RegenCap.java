@@ -14,6 +14,9 @@ public class RegenCap implements IRegenCap {
     // Separate cooldown timestamps per rest source so they are independent
     private long  lastCampfireUseTick = -1L;
     private long  lastBedUseTick = -1L;
+    // ── ActionBar Toggle (persisted) ───────────────────────────────────────
+    private boolean actionBarEnabled = false;  // default: admin bar display off
+
     // ── Transient fields (not persisted) ────────────────────────────────────
     private int   campfireTicks = 0;
     private int   exhaustedMessageCooldown = 0;
@@ -73,6 +76,9 @@ public class RegenCap implements IRegenCap {
     @Override public float getLastKnownHealth() { return lastKnownHealth; }
     @Override public void setLastKnownHealth(float health) { lastKnownHealth = health; }
 
+    @Override public boolean isActionBarEnabled() { return actionBarEnabled; }
+    @Override public void setActionBarEnabled(boolean enabled) { actionBarEnabled = enabled; }
+
     // ── NBT Persistence ──────────────────────────────────────────────────────
 
     public CompoundTag serializeNBT() {
@@ -85,6 +91,7 @@ public class RegenCap implements IRegenCap {
         tag.putBoolean("bonusClaimed",       bonusClaimed);
         tag.putLong("lastCampfireUseTick",   lastCampfireUseTick);
         tag.putLong("lastBedUseTick",        lastBedUseTick);
+        tag.putBoolean("actionBarEnabled",   actionBarEnabled);
         // campfireTicks and all other transient fields are intentionally NOT persisted.
         // Zone state resets on restart; losing a few seconds of campfire warmup is acceptable.
         return tag;
@@ -99,5 +106,6 @@ public class RegenCap implements IRegenCap {
         bonusClaimed         = tag.getBoolean("bonusClaimed");
         lastCampfireUseTick  = tag.contains("lastCampfireUseTick") ? tag.getLong("lastCampfireUseTick") : -1L;
         lastBedUseTick       = tag.contains("lastBedUseTick")      ? tag.getLong("lastBedUseTick")      : -1L;
+        actionBarEnabled     = tag.contains("actionBarEnabled")    ? tag.getBoolean("actionBarEnabled")    : false;
     }
 }

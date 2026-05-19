@@ -456,4 +456,195 @@ public class SoulslikeRegenGameTests {
             helper.succeed();
         });
     }
+
+    // ── PHASE 5: ADMIN COMMANDS - PLAYER STAT CRUD ──────────────────────
+
+    /**
+     * Test: Fatigue CRUD - set, add, drain, get.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testAdminCommandFatigueCRUD(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            
+            // Test set
+            cap.setCurrentFatigue(15.0f);
+            TestHelpers.assertEquals(helper, 15.0f, cap.getCurrentFatigue(), 0.01f, 
+                "Fatigue set to 15.0");
+            
+            // Test add
+            cap.addFatigue(10.0f);
+            TestHelpers.assertEquals(helper, 25.0f, cap.getCurrentFatigue(), 0.01f,
+                "Fatigue added 10.0 → 25.0");
+            
+            // Test drain
+            cap.drainFatigue(5.0f);
+            TestHelpers.assertEquals(helper, 20.0f, cap.getCurrentFatigue(), 0.01f,
+                "Fatigue drained 5.0 → 20.0");
+            
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: Capacity CRUD - set, get, reset.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testAdminCommandCapacityCRUD(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            float baseMax = RegenConfig.BASE_MAX_CAP;
+            
+            // Test set
+            cap.setMaxCap(100.0f);
+            TestHelpers.assertEquals(helper, 100.0f, cap.getMaxCap(), 0.01f,
+                "Max capacity set to 100.0");
+            
+            // Test reset
+            cap.setMaxCap(baseMax);
+            TestHelpers.assertEquals(helper, baseMax, cap.getMaxCap(), 0.01f,
+                "Max capacity reset to BASE_MAX_CAP");
+            
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: Level CRUD - set, get, up, reset.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testAdminCommandLevelCRUD(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            
+            // Test set
+            cap.setCurrentLevel(5);
+            TestHelpers.assertTrue(helper, cap.getCurrentLevel() == 5,
+                "Level set to 5, got " + cap.getCurrentLevel());
+            
+            // Test up (manual increment)
+            cap.setCurrentLevel(cap.getCurrentLevel() + 1);
+            TestHelpers.assertTrue(helper, cap.getCurrentLevel() == 6,
+                "Level incremented to 6, got " + cap.getCurrentLevel());
+            
+            // Test reset
+            cap.setCurrentLevel(0);
+            TestHelpers.assertTrue(helper, cap.getCurrentLevel() == 0,
+                "Level reset to 0, got " + cap.getCurrentLevel());
+            
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: ActionBar toggle - enable, disable, check persistence.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testAdminCommandActionBarToggle(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            
+            // Default should be off
+            TestHelpers.assertFalse(helper, cap.isActionBarEnabled(),
+                "Action bar should be disabled by default");
+            
+            // Enable
+            cap.setActionBarEnabled(true);
+            TestHelpers.assertTrue(helper, cap.isActionBarEnabled(),
+                "Action bar should be enabled");
+            
+            // Disable
+            cap.setActionBarEnabled(false);
+            TestHelpers.assertFalse(helper, cap.isActionBarEnabled(),
+                "Action bar should be disabled");
+            
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: Cooldown reset - day bonus and inn warmup.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testAdminCommandCooldownReset(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            
+            // Set day bonus as claimed
+            cap.setBonusClaimed(true);
+            TestHelpers.assertTrue(helper, cap.isBonusClaimed(),
+                "Day bonus should be claimed");
+            
+            // Reset
+            cap.setBonusClaimed(false);
+            TestHelpers.assertFalse(helper, cap.isBonusClaimed(),
+                "Day bonus should be unclaimed after reset");
+            
+            // Set inn warmup
+            cap.setInnWarmupTicks(100);
+            TestHelpers.assertTrue(helper, cap.getInnWarmupTicks() > 0,
+                "Inn warmup should be set");
+            
+            // Reset
+            cap.setInnWarmupTicks(0);
+            TestHelpers.assertTrue(helper, cap.getInnWarmupTicks() == 0,
+                "Inn warmup should be reset to 0");
+            
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Test: Hard reset - all stats to default.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testAdminCommandHardReset(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayer");
+
+        helper.runAfterDelay(2, () -> {
+            IRegenCap cap = TestHelpers.getCap(player);
+            float baseMax = RegenConfig.BASE_MAX_CAP;
+            
+            // Set various stats
+            cap.setCurrentFatigue(50.0f);
+            cap.setMaxCap(100.0f);
+            cap.setCurrentLevel(5);
+            
+            // Hard reset
+            cap.setCurrentFatigue(0.0f);
+            cap.setMaxCap(baseMax);
+            cap.setCurrentLevel(0);
+            
+            TestHelpers.assertEquals(helper, 0.0f, cap.getCurrentFatigue(), 0.01f,
+                "Fatigue should be 0 after hard reset");
+            TestHelpers.assertEquals(helper, baseMax, cap.getMaxCap(), 0.01f,
+                "Max capacity should be BASE_MAX_CAP after hard reset");
+            TestHelpers.assertTrue(helper, cap.getCurrentLevel() == 0,
+                "Level should be 0 after hard reset");
+            
+            helper.succeed();
+        });
+    }
 }

@@ -46,6 +46,10 @@ public interface IRegenCap {
     float getLastKnownHealth();
     void setLastKnownHealth(float health);
 
+    // ── ActionBar Toggle (for admin status display) ─────────────────────────
+    boolean isActionBarEnabled();
+    void setActionBarEnabled(boolean enabled);
+
     /** Returns true when currentFatigue >= maxCap (healing is blocked). */
     default boolean isExhausted() {
         return getCurrentFatigue() >= getMaxCap();

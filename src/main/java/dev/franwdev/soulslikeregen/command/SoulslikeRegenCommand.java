@@ -145,6 +145,166 @@ public class SoulslikeRegenCommand {
                 .then(Commands.argument("page", IntegerArgumentType.integer(1))
                     .executes(ctx -> executeListInns(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "page")))
                 )
+            )
+            
+            // --- Player Stat Commands (Admin: Permission level 2) ---
+            .then(Commands.literal("player")
+                .requires(src -> src.hasPermission(2))
+                .then(Commands.argument("playerName", StringArgumentType.string())
+                    // Player Fatigue Commands
+                    .then(Commands.literal("fatigue")
+                        .then(Commands.literal("get")
+                            .executes(ctx -> executePlayerFatigueGet(
+                                ctx.getSource(),
+                                StringArgumentType.getString(ctx, "playerName")
+                            ))
+                        )
+                        .then(Commands.literal("set")
+                            .then(Commands.argument("amount", DoubleArgumentType.doubleArg(0))
+                                .executes(ctx -> executePlayerFatigueSet(
+                                    ctx.getSource(),
+                                    StringArgumentType.getString(ctx, "playerName"),
+                                    (float) DoubleArgumentType.getDouble(ctx, "amount")
+                                ))
+                            )
+                        )
+                        .then(Commands.literal("add")
+                            .then(Commands.argument("amount", DoubleArgumentType.doubleArg(0.1))
+                                .executes(ctx -> executePlayerFatigueAdd(
+                                    ctx.getSource(),
+                                    StringArgumentType.getString(ctx, "playerName"),
+                                    (float) DoubleArgumentType.getDouble(ctx, "amount")
+                                ))
+                            )
+                        )
+                        .then(Commands.literal("drain")
+                            .then(Commands.argument("amount", DoubleArgumentType.doubleArg(0.1))
+                                .executes(ctx -> executePlayerFatigueDrain(
+                                    ctx.getSource(),
+                                    StringArgumentType.getString(ctx, "playerName"),
+                                    (float) DoubleArgumentType.getDouble(ctx, "amount")
+                                ))
+                            )
+                        )
+                    )
+                    // Player Capacity Commands
+                    .then(Commands.literal("capacity")
+                        .then(Commands.literal("get")
+                            .executes(ctx -> executePlayerCapacityGet(
+                                ctx.getSource(),
+                                StringArgumentType.getString(ctx, "playerName")
+                            ))
+                        )
+                        .then(Commands.literal("set")
+                            .then(Commands.argument("amount", DoubleArgumentType.doubleArg(1))
+                                .executes(ctx -> executePlayerCapacitySet(
+                                    ctx.getSource(),
+                                    StringArgumentType.getString(ctx, "playerName"),
+                                    (float) DoubleArgumentType.getDouble(ctx, "amount")
+                                ))
+                            )
+                        )
+                        .then(Commands.literal("reset")
+                            .executes(ctx -> executePlayerCapacityReset(
+                                ctx.getSource(),
+                                StringArgumentType.getString(ctx, "playerName")
+                            ))
+                        )
+                    )
+                    // Player Level Commands
+                    .then(Commands.literal("level")
+                        .then(Commands.literal("get")
+                            .executes(ctx -> executePlayerLevelGet(
+                                ctx.getSource(),
+                                StringArgumentType.getString(ctx, "playerName")
+                            ))
+                        )
+                        .then(Commands.literal("set")
+                            .then(Commands.argument("level", IntegerArgumentType.integer(0))
+                                .executes(ctx -> executePlayerLevelSet(
+                                    ctx.getSource(),
+                                    StringArgumentType.getString(ctx, "playerName"),
+                                    IntegerArgumentType.getInteger(ctx, "level")
+                                ))
+                            )
+                        )
+                        .then(Commands.literal("up")
+                            .executes(ctx -> executePlayerLevelUp(
+                                ctx.getSource(),
+                                StringArgumentType.getString(ctx, "playerName"),
+                                1
+                            ))
+                            .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                .executes(ctx -> executePlayerLevelUp(
+                                    ctx.getSource(),
+                                    StringArgumentType.getString(ctx, "playerName"),
+                                    IntegerArgumentType.getInteger(ctx, "amount")
+                                ))
+                            )
+                        )
+                        .then(Commands.literal("reset")
+                            .executes(ctx -> executePlayerLevelReset(
+                                ctx.getSource(),
+                                StringArgumentType.getString(ctx, "playerName")
+                            ))
+                        )
+                    )
+                    // Player TotalFatigue Command
+                    .then(Commands.literal("totalfatigue")
+                        .then(Commands.literal("get")
+                            .executes(ctx -> executePlayerTotalFatigueGet(
+                                ctx.getSource(),
+                                StringArgumentType.getString(ctx, "playerName")
+                            ))
+                        )
+                    )
+                    // Player Cooldown Commands
+                    .then(Commands.literal("cooldown")
+                        .then(Commands.literal("daybonus")
+                            .then(Commands.literal("reset")
+                                .executes(ctx -> executePlayerCooldownDayBonusReset(
+                                    ctx.getSource(),
+                                    StringArgumentType.getString(ctx, "playerName")
+                                ))
+                            )
+                        )
+                        .then(Commands.literal("innwarmup")
+                            .then(Commands.literal("reset")
+                                .executes(ctx -> executePlayerCooldownInnWarmupReset(
+                                    ctx.getSource(),
+                                    StringArgumentType.getString(ctx, "playerName")
+                                ))
+                            )
+                        )
+                    )
+                    // Player Status Command
+                    .then(Commands.literal("status")
+                        .executes(ctx -> executePlayerStatus(
+                            ctx.getSource(),
+                            StringArgumentType.getString(ctx, "playerName")
+                        ))
+                    )
+                    // Player Reset Command (HARD RESET)
+                    .then(Commands.literal("reset")
+                        .executes(ctx -> executePlayerReset(
+                            ctx.getSource(),
+                            StringArgumentType.getString(ctx, "playerName")
+                        ))
+                    )
+                )
+            )
+            
+            // --- ActionBar Toggle Commands (no permission requirement) ---
+            .then(Commands.literal("bar")
+                .then(Commands.literal("on")
+                    .executes(ctx -> executeBarEnable(ctx.getSource()))
+                )
+                .then(Commands.literal("off")
+                    .executes(ctx -> executeBarDisable(ctx.getSource()))
+                )
+                .then(Commands.literal("status")
+                    .executes(ctx -> executeBarStatus(ctx.getSource()))
+                )
             );
     }
 
@@ -376,5 +536,300 @@ public class SoulslikeRegenCommand {
         }
 
         return 1;
+    }
+
+    // ========== PLAYER STAT COMMANDS ==========
+
+    private static int executePlayerFatigueGet(CommandSourceStack src, String playerName) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            float fatigue = cap.getCurrentFatigue();
+            float maxCap = cap.getMaxCap();
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] %s's fatigue: %.1f / %.1f", playerName, fatigue, maxCap
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerFatigueSet(CommandSourceStack src, String playerName, float amount) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            float maxCap = cap.getMaxCap();
+            float clamped = Math.max(0, Math.min(amount, maxCap));
+            cap.setCurrentFatigue(clamped);
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] Set %s's fatigue to %.1f / %.1f", playerName, clamped, maxCap
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerFatigueAdd(CommandSourceStack src, String playerName, float amount) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            float before = cap.getCurrentFatigue();
+            float maxCap = cap.getMaxCap();
+            float added = cap.addFatigue(amount);
+            float after = cap.getCurrentFatigue();
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] Added %.1f fatigue to %s (%.1f → %.1f / %.1f)", added, playerName, before, after, maxCap
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerFatigueDrain(CommandSourceStack src, String playerName, float amount) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            float before = cap.getCurrentFatigue();
+            float drained = cap.drainFatigue(amount);
+            float after = cap.getCurrentFatigue();
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] Drained %.1f fatigue from %s (%.1f → %.1f)", drained, playerName, before, after
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerCapacityGet(CommandSourceStack src, String playerName) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            float maxCap = cap.getMaxCap();
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] %s's max capacity: %.1f", playerName, maxCap
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerCapacitySet(CommandSourceStack src, String playerName, float amount) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            float before = cap.getMaxCap();
+            cap.setMaxCap(amount);
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] Set %s's max capacity from %.1f to %.1f", playerName, before, amount
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerCapacityReset(CommandSourceStack src, String playerName) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            float before = cap.getMaxCap();
+            cap.setMaxCap(dev.franwdev.soulslikeregen.config.RegenConfig.BASE_MAX_CAP);
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] Reset %s's max capacity from %.1f to BASE (%.1f)", playerName, before, dev.franwdev.soulslikeregen.config.RegenConfig.BASE_MAX_CAP
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerLevelGet(CommandSourceStack src, String playerName) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            int level = cap.getCurrentLevel();
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] %s's level: %d", playerName, level
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerLevelSet(CommandSourceStack src, String playerName, int level) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            int before = cap.getCurrentLevel();
+            cap.setCurrentLevel(Math.max(0, level));
+            int maxCap = (int) cap.getMaxCap();
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] Set %s's level from %d to %d (max capacity: %.1f)", playerName, before, level, cap.getMaxCap()
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerLevelUp(CommandSourceStack src, String playerName, int amount) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            int before = cap.getCurrentLevel();
+            int after = before + Math.max(1, amount);
+            cap.setCurrentLevel(after);
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] Leveled up %s from level %d to %d (max capacity: %.1f)", playerName, before, after, cap.getMaxCap()
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerLevelReset(CommandSourceStack src, String playerName) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            int before = cap.getCurrentLevel();
+            cap.setCurrentLevel(0);
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] Reset %s's level from %d to 0", playerName, before
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerTotalFatigueGet(CommandSourceStack src, String playerName) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            float totalFatigue = cap.getTotalFatigueSpent();
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] %s's total fatigue spent: %.1f", playerName, totalFatigue
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerCooldownDayBonusReset(CommandSourceStack src, String playerName) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            cap.setBonusClaimed(false);
+            cap.setLastDamageTick(-1L);
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] Reset %s's day bonus cooldown", playerName
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerCooldownInnWarmupReset(CommandSourceStack src, String playerName) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            cap.setInnWarmupTicks(0);
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] Reset %s's inn warmup timer", playerName
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerStatus(CommandSourceStack src, String playerName) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            src.sendSuccess(() -> Component.literal(String.format(
+                "\n[SLRegen] === %s's Status ===\nFatigue: %.1f / %.1f\nMax Capacity: %.1f\nLevel: %d\nTotal Fatigue Spent: %.1f\nExhausted: %s",
+                playerName,
+                cap.getCurrentFatigue(),
+                cap.getMaxCap(),
+                cap.getMaxCap(),
+                cap.getCurrentLevel(),
+                cap.getTotalFatigueSpent(),
+                cap.isExhausted() ? "YES" : "NO"
+            )), false);
+        });
+        return 1;
+    }
+
+    private static int executePlayerReset(CommandSourceStack src, String playerName) {
+        ServerPlayer player = findPlayer(src, playerName);
+        if (player == null) return 0;
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            cap.setCurrentFatigue(0.0f);
+            cap.setMaxCap(dev.franwdev.soulslikeregen.config.RegenConfig.BASE_MAX_CAP);
+            cap.setCurrentLevel(0);
+            // Note: totalFatigueSpent is NOT reset — it's cumulative progression tracking
+            // If you want to reset that too, uncomment the next line:
+            // cap.addFatigueSpent(-cap.getTotalFatigueSpent());
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] HARD RESET %s: fatigue=0, capacity=BASE (%.1f), level=0", 
+                playerName, dev.franwdev.soulslikeregen.config.RegenConfig.BASE_MAX_CAP
+            )), false);
+        });
+        return 1;
+    }
+
+    // ========== ACTIONBAR TOGGLE COMMANDS ==========
+
+    private static int executeBarEnable(CommandSourceStack src) {
+        ServerPlayer player = (ServerPlayer) src.getEntity();
+        if (player == null) {
+            src.sendFailure(Component.literal("[SLRegen] This command only works for players."));
+            return 0;
+        }
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            cap.setActionBarEnabled(true);
+            src.sendSuccess(() -> Component.literal("[SLRegen] Status bar ENABLED - you will see your regenerative capacity on the action bar."), false);
+        });
+        return 1;
+    }
+
+    private static int executeBarDisable(CommandSourceStack src) {
+        ServerPlayer player = (ServerPlayer) src.getEntity();
+        if (player == null) {
+            src.sendFailure(Component.literal("[SLRegen] This command only works for players."));
+            return 0;
+        }
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            cap.setActionBarEnabled(false);
+            src.sendSuccess(() -> Component.literal("[SLRegen] Status bar DISABLED."), false);
+        });
+        return 1;
+    }
+
+    private static int executeBarStatus(CommandSourceStack src) {
+        ServerPlayer player = (ServerPlayer) src.getEntity();
+        if (player == null) {
+            src.sendFailure(Component.literal("[SLRegen] This command only works for players."));
+            return 0;
+        }
+
+        RegenCapProvider.get(player).ifPresent(cap -> {
+            boolean enabled = cap.isActionBarEnabled();
+            src.sendSuccess(() -> Component.literal(String.format(
+                "[SLRegen] Status bar is currently: %s", enabled ? "ENABLED" : "DISABLED"
+            )), false);
+        });
+        return 1;
+    }
+
+    // ========== HELPER METHODS ==========
+
+    private static ServerPlayer findPlayer(CommandSourceStack src, String playerName) {
+        ServerPlayer player = src.getServer().getPlayerList().getPlayerByName(playerName);
+        if (player == null) {
+            src.sendFailure(Component.literal(String.format("[SLRegen] Player '%s' not found or not online.", playerName)));
+            return null;
+        }
+        return player;
     }
 }
