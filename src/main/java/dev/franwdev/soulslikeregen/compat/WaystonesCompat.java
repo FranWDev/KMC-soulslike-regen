@@ -28,7 +28,7 @@ public class WaystonesCompat {
                 RegenCapProvider.get(player).ifPresent(cap -> {
                     cap.setCurrentFatigue(0.0f);
                     FeedbackHelper.sendWaystoneReset(player);
-                    FeedbackHelper.sendFullyRested(player, Component.translatable("msg.soulslikeregen.source.waystone"));
+                    FeedbackHelper.sendFullyRested(player, dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.source.waystone"));
                 });
             }
         }

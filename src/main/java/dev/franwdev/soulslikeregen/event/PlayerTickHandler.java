@@ -124,7 +124,7 @@ public class PlayerTickHandler {
                     if (player.tickCount % RegenConfig.NEXUS_DRAIN_INTERVAL_TICKS == 0) {
                         float drained = cap.drainFatigue(RegenConfig.NEXUS_DRAIN_RATE);
                         if (drained > 0 && cap.getCurrentFatigue() == 0) {
-                            FeedbackHelper.sendFullyRested(player, Component.literal("Nexus"));
+                            FeedbackHelper.sendFullyRested(player, dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.source.nexus"));
                         }
                     }
                 } else {
@@ -149,7 +149,7 @@ public class PlayerTickHandler {
                         if (player.tickCount % RegenConfig.INN_DRAIN_INTERVAL_TICKS == 0) {
                             float drained = cap.drainFatigue(RegenConfig.INN_DRAIN_RATE);
                             if (drained > 0 && cap.getCurrentFatigue() == 0) {
-                                FeedbackHelper.sendFullyRested(player, Component.literal("Inn"));
+                                FeedbackHelper.sendFullyRested(player, dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.source.inn"));
                             }
                         }
                     }
@@ -205,7 +205,7 @@ public class PlayerTickHandler {
                 if (cap.isActionBarEnabled()) {
                     // Persistent bar: send every 10 ticks (2 Hz) to keep it visible
                     if (player.tickCount % 10 == 0) {
-                        Component bar = FeedbackHelper.buildStatusBar(cap);
+                        Component bar = FeedbackHelper.buildStatusBar(player, cap);
                         FeedbackHelper.sendActionBar(player, bar);
                     }
                 } else {

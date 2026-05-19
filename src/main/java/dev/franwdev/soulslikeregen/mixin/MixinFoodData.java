@@ -37,12 +37,6 @@ public abstract class MixinFoodData {
             if (cap.isExhausted()) {
                 // Block the heal — food/saturation cost already applied by FoodData above.
                 ci.cancel();
-
-                // Throttle the "exhausted" feedback message (send at most once every 5 seconds)
-                if (cap.getExhaustedMessageCooldown() <= 0) {
-                    FeedbackHelper.sendExhaustedFeedback((ServerPlayer) tickPlayer);
-                    cap.setExhaustedMessageCooldown(100); // 100 ticks = 5 seconds
-                }
             }
             // If not exhausted, the heal proceeds normally.
             // The fatigue accumulation from the heal is handled in a separate

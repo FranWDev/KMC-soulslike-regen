@@ -27,6 +27,8 @@
   
   "msg.soulslikeregen.source.waystone": "Waystone",
   "msg.soulslikeregen.source.command": "Command",
+  "msg.soulslikeregen.source.nexus": "Team Nexus",
+  "msg.soulslikeregen.source.inn": "Inn",
   
   "msg.soulslikeregen.command.nexus.set": "Set Team Nexus #%s for team '%s' at coordinates [%s, %s, %s] with radius %s.",
   "msg.soulslikeregen.command.nexus.edit_radius": "Updated Nexus #%s radius to %s.",

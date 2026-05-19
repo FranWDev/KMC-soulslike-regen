@@ -56,10 +56,14 @@ repositories {
     maven { url 'https://maven.blamejared.com' }
     maven { url 'https://modmaven.dev' }
     maven { url 'https://api.modrinth.com/maven' }
+    mavenCentral()
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // Mixin annotation processor for refmap generation
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     // Optional: FTB Teams
     compileOnly fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftbteams_version}")

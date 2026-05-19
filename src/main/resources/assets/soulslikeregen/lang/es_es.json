@@ -27,6 +27,8 @@
   
   "msg.soulslikeregen.source.waystone": "Piedra de Viaje",
   "msg.soulslikeregen.source.command": "Comando de Administrador",
+  "msg.soulslikeregen.source.nexus": "Nexo de Equipo",
+  "msg.soulslikeregen.source.inn": "Posada",
   
   "msg.soulslikeregen.command.nexus.set": "Se ha creado el Nexo de Equipo #%s para el equipo '%s' en las coordenadas [%s, %s, %s] con un radio de %s.",
   "msg.soulslikeregen.command.nexus.edit_radius": "Se ha actualizado el radio del Nexo #%s a %s.",

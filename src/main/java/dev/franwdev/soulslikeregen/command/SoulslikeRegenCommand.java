@@ -311,11 +311,11 @@ public class SoulslikeRegenCommand {
     private static int executeStatus(CommandSourceStack src) {
         if (src.getEntity() instanceof ServerPlayer player) {
             RegenCapProvider.get(player).ifPresent(cap -> {
-                Component bar = FeedbackHelper.buildStatusBar(cap);
+                Component bar = FeedbackHelper.buildStatusBar(player, cap);
                 player.connection.send(new ClientboundSetActionBarTextPacket(bar));
             });
         } else {
-            src.sendFailure(Component.translatable("msg.soulslikeregen.command.only_player"));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.only_player"));
         }
         return 1;
     }
@@ -325,7 +325,7 @@ public class SoulslikeRegenCommand {
         
         UUID teamId = FTBTeamsCompat.getTeamIdByName(teamName);
         if (FTBTeamsCompat.isLoaded() && teamId == null) {
-            src.sendFailure(Component.translatable("msg.soulslikeregen.command.nexus.team_not_found", teamName));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.nexus.team_not_found", teamName));
             return 0;
         }
         if (teamId == null) {
@@ -335,7 +335,7 @@ public class SoulslikeRegenCommand {
         NexusData data = NexusData.get(level);
         NexusEntry entry = data.addNexus(coords.x, coords.y, coords.z, radius, level.dimension(), teamId, teamName);
 
-        src.sendSuccess(() -> Component.translatable(
+        src.sendSuccess(() -> translatable(src,
             "msg.soulslikeregen.command.nexus.set",
             String.valueOf(entry.id()),
             teamName,
@@ -352,14 +352,14 @@ public class SoulslikeRegenCommand {
         ServerLevel level = src.getLevel();
         NexusData data = NexusData.get(level);
         if (data.updateNexusRadius(id, newRadius)) {
-            src.sendSuccess(() -> Component.translatable(
+            src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.nexus.edit_radius",
                 String.valueOf(id),
                 String.format("%.1f", newRadius)
             ), true);
             return 1;
         } else {
-            src.sendFailure(Component.translatable("msg.soulslikeregen.command.nexus.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.nexus.not_found", String.valueOf(id)));
             return 0;
         }
     }
@@ -368,7 +368,7 @@ public class SoulslikeRegenCommand {
         ServerLevel level = src.getLevel();
         NexusData data = NexusData.get(level);
         if (data.updateNexusCoords(id, coords.x, coords.y, coords.z)) {
-            src.sendSuccess(() -> Component.translatable(
+            src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.nexus.edit_coords",
                 String.valueOf(id),
                 String.valueOf((int) coords.x),
@@ -377,7 +377,7 @@ public class SoulslikeRegenCommand {
             ), true);
             return 1;
         } else {
-            src.sendFailure(Component.translatable("msg.soulslikeregen.command.nexus.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.nexus.not_found", String.valueOf(id)));
             return 0;
         }
     }
@@ -386,10 +386,10 @@ public class SoulslikeRegenCommand {
         ServerLevel level = src.getLevel();
         NexusData data = NexusData.get(level);
         if (data.removeNexus(id)) {
-            src.sendSuccess(() -> Component.translatable("msg.soulslikeregen.command.nexus.remove", String.valueOf(id)), true);
+            src.sendSuccess(() -> translatable(src, "msg.soulslikeregen.command.nexus.remove", String.valueOf(id)), true);
             return 1;
         } else {
-            src.sendFailure(Component.translatable("msg.soulslikeregen.command.nexus.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.nexus.not_found", String.valueOf(id)));
             return 0;
         }
     }
@@ -412,7 +412,7 @@ public class SoulslikeRegenCommand {
 
         final int finalPage = page;
         final int finalMaxPage = maxPage;
-        src.sendSuccess(() -> Component.translatable("msg.soulslikeregen.command.nexus.list_title", String.valueOf(finalPage), String.valueOf(finalMaxPage)), false);
+        src.sendSuccess(() -> translatable(src, "msg.soulslikeregen.command.nexus.list_title", String.valueOf(finalPage), String.valueOf(finalMaxPage)), false);
 
         List<NexusEntry> list = new ArrayList<>(all);
         int start = (page - 1) * pageSize;
@@ -420,7 +420,7 @@ public class SoulslikeRegenCommand {
 
         for (int i = start; i < end; i++) {
             NexusEntry entry = list.get(i);
-            src.sendSuccess(() -> Component.translatable(
+            src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.nexus.list_item",
                 String.valueOf(entry.id()),
                 entry.teamName(),
@@ -440,7 +440,7 @@ public class SoulslikeRegenCommand {
         InnData data = InnData.get(level);
         InnEntry entry = data.addInn(coords.x, coords.y, coords.z, radius, level.dimension());
 
-        src.sendSuccess(() -> Component.translatable(
+        src.sendSuccess(() -> translatable(src,
             "msg.soulslikeregen.command.inn.set",
             String.valueOf(entry.id()),
             String.valueOf((int) coords.x),
@@ -456,14 +456,14 @@ public class SoulslikeRegenCommand {
         ServerLevel level = src.getLevel();
         InnData data = InnData.get(level);
         if (data.updateInnRadius(id, newRadius)) {
-            src.sendSuccess(() -> Component.translatable(
+            src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.inn.edit_radius",
                 String.valueOf(id),
                 String.format("%.1f", newRadius)
             ), true);
             return 1;
         } else {
-            src.sendFailure(Component.translatable("msg.soulslikeregen.command.inn.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.inn.not_found", String.valueOf(id)));
             return 0;
         }
     }
@@ -472,7 +472,7 @@ public class SoulslikeRegenCommand {
         ServerLevel level = src.getLevel();
         InnData data = InnData.get(level);
         if (data.updateInnCoords(id, coords.x, coords.y, coords.z)) {
-            src.sendSuccess(() -> Component.translatable(
+            src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.inn.edit_coords",
                 String.valueOf(id),
                 String.valueOf((int) coords.x),
@@ -481,7 +481,7 @@ public class SoulslikeRegenCommand {
             ), true);
             return 1;
         } else {
-            src.sendFailure(Component.translatable("msg.soulslikeregen.command.inn.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.inn.not_found", String.valueOf(id)));
             return 0;
         }
     }
@@ -490,10 +490,10 @@ public class SoulslikeRegenCommand {
         ServerLevel level = src.getLevel();
         InnData data = InnData.get(level);
         if (data.removeInn(id)) {
-            src.sendSuccess(() -> Component.translatable("msg.soulslikeregen.command.inn.remove", String.valueOf(id)), true);
+            src.sendSuccess(() -> translatable(src, "msg.soulslikeregen.command.inn.remove", String.valueOf(id)), true);
             return 1;
         } else {
-            src.sendFailure(Component.translatable("msg.soulslikeregen.command.inn.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.inn.not_found", String.valueOf(id)));
             return 0;
         }
     }
@@ -516,7 +516,7 @@ public class SoulslikeRegenCommand {
 
         final int finalPage = page;
         final int finalMaxPage = maxPage;
-        src.sendSuccess(() -> Component.translatable("msg.soulslikeregen.command.inn.list_title", String.valueOf(finalPage), String.valueOf(finalMaxPage)), false);
+        src.sendSuccess(() -> translatable(src, "msg.soulslikeregen.command.inn.list_title", String.valueOf(finalPage), String.valueOf(finalMaxPage)), false);
 
         List<InnEntry> list = new ArrayList<>(all);
         int start = (page - 1) * pageSize;
@@ -524,7 +524,7 @@ public class SoulslikeRegenCommand {
 
         for (int i = start; i < end; i++) {
             InnEntry entry = list.get(i);
-            src.sendSuccess(() -> Component.translatable(
+            src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.inn.list_item",
                 String.valueOf(entry.id()),
                 String.valueOf((int) entry.x()),
@@ -823,6 +823,11 @@ public class SoulslikeRegenCommand {
     }
 
     // ========== HELPER METHODS ==========
+
+    private static Component translatable(CommandSourceStack src, String key, Object... args) {
+        ServerPlayer player = src.getEntity() instanceof ServerPlayer p ? p : null;
+        return dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper.getComponent(player, key, args);
+    }
 
     private static ServerPlayer findPlayer(CommandSourceStack src, String playerName) {
         ServerPlayer player = src.getServer().getPlayerList().getPlayerByName(playerName);
