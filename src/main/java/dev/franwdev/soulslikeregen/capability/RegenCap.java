@@ -28,7 +28,7 @@ public class RegenCap implements IRegenCap {
     public RegenCap() {
         // maxCap is set from config at construction time.
         // If config is not baked yet (early init), it defaults to 40.0.
-        this.maxCap = RegenConfig.BASE_MAX_CAP > 0 ? RegenConfig.BASE_MAX_CAP : 40.0f;
+        this.maxCap = RegenConfig.BASE_MAX_CAP > 0 ? RegenConfig.BASE_MAX_CAP : 80.0f;
     }
 
     // ── IRegenCap implementation ─────────────────────────────────────────────

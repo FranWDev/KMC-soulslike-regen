@@ -12,8 +12,8 @@ public class RegenConfig {
 
     // ── Baked static fields (read once, used in hot paths) ──────────────────
 
-    /** Starting capacity in half-hearts (e.g. 40 = 20 hearts). */
-    public static float BASE_MAX_CAP = 40.0f;
+    /** Starting capacity in half-hearts (e.g. 80 = 40 hearts). */
+    public static float BASE_MAX_CAP = 80.0f;
 
     /** Ally proximity bonus reduction per ally (default 0.1 = 10%). */
     public static float ALLY_DISCOUNT_PER_PLAYER = 0.10f;
@@ -95,8 +95,8 @@ public class RegenConfig {
         b.comment("KMC Soulslike Regen — Common Configuration").push("general");
 
         CFG_BASE_MAX_CAP = b
-            .comment("Starting regeneration capacity in half-hearts (40 = 20 hearts).")
-            .defineInRange("base_max_cap", 40.0, 1.0, 10000.0);
+            .comment("Starting regeneration capacity in half-hearts (80 = 40 hearts).")
+            .defineInRange("base_max_cap", 80.0, 1.0, 10000.0);
 
         CFG_ALLY_DISCOUNT_PER_PLAYER = b
             .comment("Fatigue cost reduction per nearby ally (0.1 = 10%).")

@@ -12,6 +12,12 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import dev.franwdev.soulslikeregen.capability.IRegenCap;
 import dev.franwdev.soulslikeregen.config.RegenConfig;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
 
 /**
  * Main GameTest suite for KMC Soulslike Regen mod.
@@ -646,5 +652,138 @@ public class SoulslikeRegenGameTests {
             
             helper.succeed();
         });
+    }
+
+    /**
+     * Test: Campfire rest.
+     */
+    @GameTest(template = "empty", timeoutTicks = 800)
+    public static void testCampfireRest(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "CampfireTester");
+        IRegenCap cap = TestHelpers.getCap(player);
+        cap.setCurrentFatigue(30.0f);
+        
+        // Ensure cooldown is clear
+        cap.setLastCampfireUseTick(-1L);
+ 
+        // Clear any nearby campfires to avoid crosstalk
+        BlockPos playerPos = player.blockPosition();
+        for (BlockPos pos : BlockPos.betweenClosed(playerPos.offset(-4, -2, -4), playerPos.offset(4, 2, 4))) {
+            BlockState state = player.level().getBlockState(pos);
+            if (state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE)) {
+                player.level().setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+            }
+        }
+ 
+        // Place a lit campfire within 4 blocks of player
+        BlockPos campfirePos = playerPos.offset(1, 0, 1);
+        player.level().setBlock(campfirePos, Blocks.CAMPFIRE.defaultBlockState()
+            .setValue(CampfireBlock.LIT, true), 3);
+ 
+        // Simulate stationary player near campfire
+        player.setDeltaMovement(Vec3.ZERO);
+ 
+        // Tick player for required campfire ticks (600 ticks = 30s)
+        TestHelpers.tickPlayer(player, RegenConfig.CAMPFIRE_REQUIRED_TICKS);
+ 
+        TestHelpers.assertEquals(helper, 30.0f - RegenConfig.CAMPFIRE_REDUCTION, cap.getCurrentFatigue(), 0.01f,
+            "Fatigue should be reduced by campfire rest");
+        helper.succeed();
+    }
+ 
+    /**
+     * Test: Bed sleep rest.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testBedSleepRest(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "BedTester");
+        IRegenCap cap = TestHelpers.getCap(player);
+        cap.setCurrentFatigue(30.0f);
+        
+        cap.setLastBedUseTick(-1L);
+ 
+        // Clear any nearby campfires to avoid crosstalk between parallel tests
+        BlockPos playerPos = player.blockPosition();
+        for (BlockPos pos : BlockPos.betweenClosed(playerPos.offset(-4, -2, -4), playerPos.offset(4, 2, 4))) {
+            BlockState state = player.level().getBlockState(pos);
+            if (state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE)) {
+                player.level().setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+            }
+        }
+ 
+        // Fire PlayerWakeUpEvent with wakeImmediately = false, updateLevel = true
+        MinecraftForge.EVENT_BUS.post(
+            new PlayerWakeUpEvent(player, false, true)
+        );
+ 
+        TestHelpers.assertEquals(helper, 15.0f, cap.getCurrentFatigue(), 0.01f,
+            "Fatigue should be reduced by 50% by bed sleep");
+        helper.succeed();
+    }
+ 
+    /**
+     * Test: Interrupted bed sleep has no fatigue reduction.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testBedSleepInterrupted(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "InterruptedTester");
+        IRegenCap cap = TestHelpers.getCap(player);
+        cap.setCurrentFatigue(30.0f);
+        
+        cap.setLastBedUseTick(-1L);
+ 
+        // Fire PlayerWakeUpEvent with wakeImmediately = true
+        MinecraftForge.EVENT_BUS.post(
+            new PlayerWakeUpEvent(player, true, true)
+        );
+ 
+        TestHelpers.assertEquals(helper, 30.0f, cap.getCurrentFatigue(), 0.01f,
+            "Fatigue should not be reduced if sleep was interrupted");
+        helper.succeed();
+    }
+ 
+    /**
+     * Test: Campfire and Bed no longer stack instantly on wake up.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testCampfireAndBedNoStackingOnWakeUp(GameTestHelper helper) {
+        TestDataStub.reset();
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "NoStackTester");
+        IRegenCap cap = TestHelpers.getCap(player);
+        cap.setCurrentFatigue(40.0f);
+        
+        cap.setLastBedUseTick(-1L);
+        cap.setLastCampfireUseTick(-1L);
+ 
+        // Clear any nearby campfires to avoid crosstalk
+        BlockPos playerPos = player.blockPosition();
+        for (BlockPos pos : BlockPos.betweenClosed(playerPos.offset(-4, -2, -4), playerPos.offset(4, 2, 4))) {
+            BlockState state = player.level().getBlockState(pos);
+            if (state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE)) {
+                player.level().setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+            }
+        }
+ 
+        // Place a lit campfire within 4 blocks of player
+        BlockPos campfirePos = playerPos.offset(1, 0, 1);
+        player.level().setBlock(campfirePos, Blocks.CAMPFIRE.defaultBlockState()
+            .setValue(CampfireBlock.LIT, true), 3);
+ 
+        // Fire PlayerWakeUpEvent
+        MinecraftForge.EVENT_BUS.post(
+            new PlayerWakeUpEvent(player, false, true)
+        );
+ 
+        // Should ONLY have reduced 50% from bed rest, campfire rest should NOT be applied on wake up
+        TestHelpers.assertEquals(helper, 20.0f, cap.getCurrentFatigue(), 0.01f,
+            "Fatigue should only be reduced by bed sleep, campfire rest should not stack instantly on wake up");
+        helper.succeed();
     }
 }

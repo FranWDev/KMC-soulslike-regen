@@ -7,6 +7,11 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 import dev.franwdev.soulslikeregen.SoulslikeRegen;
 import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
@@ -40,13 +45,18 @@ public class ServerEventHandler {
     @SubscribeEvent
     public static void onPlayerWakeUp(PlayerWakeUpEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            if (!player.level().isClientSide() && player.level().isDay()) {
+            if (!player.level().isClientSide() && !event.wakeImmediately()) {
                 RegenCapProvider.get(player).ifPresent(cap -> {
-                    long currentTime = player.level().getGameTime();
-                    if (cap.getLastBedUseTick() < 0 || currentTime - cap.getLastBedUseTick() >= RegenConfig.BED_COOLDOWN_TICKS) {
-                        cap.drainFatigue(RegenConfig.BED_REDUCTION);
-                        cap.setLastBedUseTick(currentTime);
-                        FeedbackHelper.sendBedRest(player, RegenConfig.BED_REDUCTION);
+                    ServerLevel level = player.serverLevel();
+                    long currentDay = Math.max(0L, level.getDayTime()) / 24000L;
+                    long lastBedDay = cap.getLastBedUseTick() < 0 ? -1L : Math.max(0L, cap.getLastBedUseTick()) / 24000L;
+
+                    // Bed Rest (50% reduction of current fatigue)
+                    if (cap.getLastBedUseTick() < 0 || currentDay > lastBedDay) {
+                        float drained = cap.getCurrentFatigue() * 0.5f;
+                        cap.drainFatigue(drained);
+                        cap.setLastBedUseTick(level.getDayTime());
+                        FeedbackHelper.sendBedRest(player, drained);
                     }
                 });
             }

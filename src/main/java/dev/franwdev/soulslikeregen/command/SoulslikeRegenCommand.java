@@ -11,6 +11,9 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
+import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
@@ -23,6 +26,7 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 
 import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
 import dev.franwdev.soulslikeregen.compat.FTBTeamsCompat;
+import dev.franwdev.soulslikeregen.config.RegenConfig;
 import dev.franwdev.soulslikeregen.data.InnData;
 import dev.franwdev.soulslikeregen.data.InnEntry;
 import dev.franwdev.soulslikeregen.data.NexusData;
@@ -30,6 +34,14 @@ import dev.franwdev.soulslikeregen.data.NexusEntry;
 import dev.franwdev.soulslikeregen.feedback.FeedbackHelper;
 
 public class SoulslikeRegenCommand {
+
+    private static LiteralArgumentBuilder<CommandSourceStack> literal(String name) {
+        return LiteralArgumentBuilder.literal(name);
+    }
+
+    private static <T> RequiredArgumentBuilder<CommandSourceStack, T> argument(String name, ArgumentType<T> type) {
+        return RequiredArgumentBuilder.argument(name, type);
+    }
 
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
@@ -42,31 +54,31 @@ public class SoulslikeRegenCommand {
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> buildCommandTree(String name) {
-        return Commands.literal(name)
-            .then(Commands.literal("status")
+        return literal(name)
+            .then(literal("status")
                 .executes(ctx -> executeStatus(ctx.getSource())))
             
             // --- Nexus Commands (Admin: Permission level 2) ---
-            .then(Commands.literal("setTeamNexus")
+            .then(literal("setTeamNexus")
                 .requires(src -> src.hasPermission(2))
-                .then(Commands.argument("coords", Vec3Argument.vec3())
-                    .then(Commands.argument("radius", DoubleArgumentType.doubleArg(0.1))
-                        .then(Commands.argument("teamName", StringArgumentType.string())
+                .then(argument("coords", Vec3Argument.vec3())
+                    .then(argument("radius", DoubleArgumentType.doubleArg(0.1))
+                        .then(argument("teamName", StringArgumentType.string())
                             .executes(ctx -> executeSetNexus(
                                 ctx.getSource(),
                                 Vec3Argument.getVec3(ctx, "coords"),
                                 DoubleArgumentType.getDouble(ctx, "radius"),
                                 StringArgumentType.getString(ctx, "teamName")
-                            ))
+                             ))
                         )
                     )
                 )
             )
-            .then(Commands.literal("editTeamNexus")
+            .then(literal("editTeamNexus")
                 .requires(src -> src.hasPermission(2))
-                .then(Commands.argument("id", IntegerArgumentType.integer(1))
-                    .then(Commands.literal("radius")
-                        .then(Commands.argument("newRadius", DoubleArgumentType.doubleArg(0.1))
+                .then(argument("id", IntegerArgumentType.integer(1))
+                    .then(literal("radius")
+                        .then(argument("newRadius", DoubleArgumentType.doubleArg(0.1))
                             .executes(ctx -> executeEditNexusRadius(
                                 ctx.getSource(),
                                 IntegerArgumentType.getInteger(ctx, "id"),
@@ -74,8 +86,8 @@ public class SoulslikeRegenCommand {
                             ))
                         )
                     )
-                    .then(Commands.literal("coords")
-                        .then(Commands.argument("coords", Vec3Argument.vec3())
+                    .then(literal("coords")
+                        .then(argument("coords", Vec3Argument.vec3())
                             .executes(ctx -> executeEditNexusCoords(
                                 ctx.getSource(),
                                 IntegerArgumentType.getInteger(ctx, "id"),
@@ -85,24 +97,24 @@ public class SoulslikeRegenCommand {
                     )
                 )
             )
-            .then(Commands.literal("removeTeamNexus")
+            .then(literal("removeTeamNexus")
                 .requires(src -> src.hasPermission(2))
-                .then(Commands.argument("id", IntegerArgumentType.integer(1))
+                .then(argument("id", IntegerArgumentType.integer(1))
                     .executes(ctx -> executeRemoveNexus(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "id")))
                 )
             )
-            .then(Commands.literal("listNexus")
+            .then(literal("listNexus")
                 .executes(ctx -> executeListNexus(ctx.getSource(), 1))
-                .then(Commands.argument("page", IntegerArgumentType.integer(1))
+                .then(argument("page", IntegerArgumentType.integer(1))
                     .executes(ctx -> executeListNexus(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "page")))
                 )
             )
 
             // --- Inn Commands (Admin: Permission level 2) ---
-            .then(Commands.literal("setInn")
+            .then(literal("setInn")
                 .requires(src -> src.hasPermission(2))
-                .then(Commands.argument("coords", Vec3Argument.vec3())
-                    .then(Commands.argument("radius", DoubleArgumentType.doubleArg(0.1))
+                .then(argument("coords", Vec3Argument.vec3())
+                    .then(argument("radius", DoubleArgumentType.doubleArg(0.1))
                         .executes(ctx -> executeSetInn(
                             ctx.getSource(),
                             Vec3Argument.getVec3(ctx, "coords"),
@@ -111,11 +123,11 @@ public class SoulslikeRegenCommand {
                     )
                 )
             )
-            .then(Commands.literal("editInn")
+            .then(literal("editInn")
                 .requires(src -> src.hasPermission(2))
-                .then(Commands.argument("id", IntegerArgumentType.integer(1))
-                    .then(Commands.literal("radius")
-                        .then(Commands.argument("newRadius", DoubleArgumentType.doubleArg(0.1))
+                .then(argument("id", IntegerArgumentType.integer(1))
+                    .then(literal("radius")
+                        .then(argument("newRadius", DoubleArgumentType.doubleArg(0.1))
                             .executes(ctx -> executeEditInnRadius(
                                 ctx.getSource(),
                                 IntegerArgumentType.getInteger(ctx, "id"),
@@ -123,8 +135,8 @@ public class SoulslikeRegenCommand {
                             ))
                         )
                     )
-                    .then(Commands.literal("coords")
-                        .then(Commands.argument("coords", Vec3Argument.vec3())
+                    .then(literal("coords")
+                        .then(argument("coords", Vec3Argument.vec3())
                             .executes(ctx -> executeEditInnCoords(
                                 ctx.getSource(),
                                 IntegerArgumentType.getInteger(ctx, "id"),
@@ -134,33 +146,33 @@ public class SoulslikeRegenCommand {
                     )
                 )
             )
-            .then(Commands.literal("removeInn")
+            .then(literal("removeInn")
                 .requires(src -> src.hasPermission(2))
-                .then(Commands.argument("id", IntegerArgumentType.integer(1))
+                .then(argument("id", IntegerArgumentType.integer(1))
                     .executes(ctx -> executeRemoveInn(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "id")))
                 )
             )
-            .then(Commands.literal("listInns")
+            .then(literal("listInns")
                 .executes(ctx -> executeListInns(ctx.getSource(), 1))
-                .then(Commands.argument("page", IntegerArgumentType.integer(1))
+                .then(argument("page", IntegerArgumentType.integer(1))
                     .executes(ctx -> executeListInns(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "page")))
                 )
             )
             
             // --- Player Stat Commands (Admin: Permission level 2) ---
-            .then(Commands.literal("player")
+            .then(literal("player")
                 .requires(src -> src.hasPermission(2))
-                .then(Commands.argument("playerName", StringArgumentType.string())
+                .then(argument("playerName", StringArgumentType.string())
                     // Player Fatigue Commands
-                    .then(Commands.literal("fatigue")
-                        .then(Commands.literal("get")
+                    .then(literal("fatigue")
+                        .then(literal("get")
                             .executes(ctx -> executePlayerFatigueGet(
                                 ctx.getSource(),
                                 StringArgumentType.getString(ctx, "playerName")
                             ))
                         )
-                        .then(Commands.literal("set")
-                            .then(Commands.argument("amount", DoubleArgumentType.doubleArg(0))
+                        .then(literal("set")
+                            .then(argument("amount", DoubleArgumentType.doubleArg(0))
                                 .executes(ctx -> executePlayerFatigueSet(
                                     ctx.getSource(),
                                     StringArgumentType.getString(ctx, "playerName"),
@@ -168,8 +180,8 @@ public class SoulslikeRegenCommand {
                                 ))
                             )
                         )
-                        .then(Commands.literal("add")
-                            .then(Commands.argument("amount", DoubleArgumentType.doubleArg(0.1))
+                        .then(literal("add")
+                            .then(argument("amount", DoubleArgumentType.doubleArg(0.1))
                                 .executes(ctx -> executePlayerFatigueAdd(
                                     ctx.getSource(),
                                     StringArgumentType.getString(ctx, "playerName"),
@@ -177,8 +189,8 @@ public class SoulslikeRegenCommand {
                                 ))
                             )
                         )
-                        .then(Commands.literal("drain")
-                            .then(Commands.argument("amount", DoubleArgumentType.doubleArg(0.1))
+                        .then(literal("drain")
+                            .then(argument("amount", DoubleArgumentType.doubleArg(0.1))
                                 .executes(ctx -> executePlayerFatigueDrain(
                                     ctx.getSource(),
                                     StringArgumentType.getString(ctx, "playerName"),
@@ -188,15 +200,15 @@ public class SoulslikeRegenCommand {
                         )
                     )
                     // Player Capacity Commands
-                    .then(Commands.literal("capacity")
-                        .then(Commands.literal("get")
+                    .then(literal("capacity")
+                        .then(literal("get")
                             .executes(ctx -> executePlayerCapacityGet(
                                 ctx.getSource(),
                                 StringArgumentType.getString(ctx, "playerName")
                             ))
                         )
-                        .then(Commands.literal("set")
-                            .then(Commands.argument("amount", DoubleArgumentType.doubleArg(1))
+                        .then(literal("set")
+                            .then(argument("amount", DoubleArgumentType.doubleArg(1))
                                 .executes(ctx -> executePlayerCapacitySet(
                                     ctx.getSource(),
                                     StringArgumentType.getString(ctx, "playerName"),
@@ -204,7 +216,7 @@ public class SoulslikeRegenCommand {
                                 ))
                             )
                         )
-                        .then(Commands.literal("reset")
+                        .then(literal("reset")
                             .executes(ctx -> executePlayerCapacityReset(
                                 ctx.getSource(),
                                 StringArgumentType.getString(ctx, "playerName")
@@ -212,15 +224,15 @@ public class SoulslikeRegenCommand {
                         )
                     )
                     // Player Level Commands
-                    .then(Commands.literal("level")
-                        .then(Commands.literal("get")
+                    .then(literal("level")
+                        .then(literal("get")
                             .executes(ctx -> executePlayerLevelGet(
                                 ctx.getSource(),
                                 StringArgumentType.getString(ctx, "playerName")
                             ))
                         )
-                        .then(Commands.literal("set")
-                            .then(Commands.argument("level", IntegerArgumentType.integer(0))
+                        .then(literal("set")
+                            .then(argument("level", IntegerArgumentType.integer(0))
                                 .executes(ctx -> executePlayerLevelSet(
                                     ctx.getSource(),
                                     StringArgumentType.getString(ctx, "playerName"),
@@ -228,13 +240,13 @@ public class SoulslikeRegenCommand {
                                 ))
                             )
                         )
-                        .then(Commands.literal("up")
+                        .then(literal("up")
                             .executes(ctx -> executePlayerLevelUp(
                                 ctx.getSource(),
                                 StringArgumentType.getString(ctx, "playerName"),
                                 1
                             ))
-                            .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                            .then(argument("amount", IntegerArgumentType.integer(1))
                                 .executes(ctx -> executePlayerLevelUp(
                                     ctx.getSource(),
                                     StringArgumentType.getString(ctx, "playerName"),
@@ -242,7 +254,7 @@ public class SoulslikeRegenCommand {
                                 ))
                             )
                         )
-                        .then(Commands.literal("reset")
+                        .then(literal("reset")
                             .executes(ctx -> executePlayerLevelReset(
                                 ctx.getSource(),
                                 StringArgumentType.getString(ctx, "playerName")
@@ -250,8 +262,8 @@ public class SoulslikeRegenCommand {
                         )
                     )
                     // Player TotalFatigue Command
-                    .then(Commands.literal("totalfatigue")
-                        .then(Commands.literal("get")
+                    .then(literal("totalfatigue")
+                        .then(literal("get")
                             .executes(ctx -> executePlayerTotalFatigueGet(
                                 ctx.getSource(),
                                 StringArgumentType.getString(ctx, "playerName")
@@ -259,17 +271,17 @@ public class SoulslikeRegenCommand {
                         )
                     )
                     // Player Cooldown Commands
-                    .then(Commands.literal("cooldown")
-                        .then(Commands.literal("daybonus")
-                            .then(Commands.literal("reset")
+                    .then(literal("cooldown")
+                        .then(literal("daybonus")
+                            .then(literal("reset")
                                 .executes(ctx -> executePlayerCooldownDayBonusReset(
                                     ctx.getSource(),
                                     StringArgumentType.getString(ctx, "playerName")
                                 ))
                             )
                         )
-                        .then(Commands.literal("innwarmup")
-                            .then(Commands.literal("reset")
+                        .then(literal("innwarmup")
+                            .then(literal("reset")
                                 .executes(ctx -> executePlayerCooldownInnWarmupReset(
                                     ctx.getSource(),
                                     StringArgumentType.getString(ctx, "playerName")
@@ -278,14 +290,14 @@ public class SoulslikeRegenCommand {
                         )
                     )
                     // Player Status Command
-                    .then(Commands.literal("status")
+                    .then(literal("status")
                         .executes(ctx -> executePlayerStatus(
                             ctx.getSource(),
                             StringArgumentType.getString(ctx, "playerName")
                         ))
                     )
                     // Player Reset Command (HARD RESET)
-                    .then(Commands.literal("reset")
+                    .then(literal("reset")
                         .executes(ctx -> executePlayerReset(
                             ctx.getSource(),
                             StringArgumentType.getString(ctx, "playerName")
@@ -295,14 +307,14 @@ public class SoulslikeRegenCommand {
             )
             
             // --- ActionBar Toggle Commands (no permission requirement) ---
-            .then(Commands.literal("bar")
-                .then(Commands.literal("on")
+            .then(literal("bar")
+                .then(literal("on")
                     .executes(ctx -> executeBarEnable(ctx.getSource()))
                 )
-                .then(Commands.literal("off")
+                .then(literal("off")
                     .executes(ctx -> executeBarDisable(ctx.getSource()))
                 )
-                .then(Commands.literal("status")
+                .then(literal("status")
                     .executes(ctx -> executeBarStatus(ctx.getSource()))
                 )
             );
@@ -633,9 +645,9 @@ public class SoulslikeRegenCommand {
 
         RegenCapProvider.get(player).ifPresent(cap -> {
             float before = cap.getMaxCap();
-            cap.setMaxCap(dev.franwdev.soulslikeregen.config.RegenConfig.BASE_MAX_CAP);
+            cap.setMaxCap(RegenConfig.BASE_MAX_CAP);
             src.sendSuccess(() -> Component.literal(String.format(
-                "[SLRegen] Reset %s's max capacity from %.1f to BASE (%.1f)", playerName, before, dev.franwdev.soulslikeregen.config.RegenConfig.BASE_MAX_CAP
+                "[SLRegen] Reset %s's max capacity from %.1f to BASE (%.1f)", playerName, before, RegenConfig.BASE_MAX_CAP
             )), false);
         });
         return 1;
@@ -763,7 +775,7 @@ public class SoulslikeRegenCommand {
 
         RegenCapProvider.get(player).ifPresent(cap -> {
             cap.setCurrentFatigue(0.0f);
-            cap.setMaxCap(dev.franwdev.soulslikeregen.config.RegenConfig.BASE_MAX_CAP);
+            cap.setMaxCap(RegenConfig.BASE_MAX_CAP);
             cap.setCurrentLevel(0);
             // Note: totalFatigueSpent is NOT reset — it's cumulative progression tracking
             // If you want to reset that too, uncomment the next line:

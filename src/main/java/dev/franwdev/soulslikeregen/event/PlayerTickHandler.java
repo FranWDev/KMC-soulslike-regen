@@ -180,10 +180,11 @@ public class PlayerTickHandler {
                     if (nearCampfire && stationary) {
                         cap.setCampfireTicks(cap.getCampfireTicks() + 20);
                         if (cap.getCampfireTicks() >= RegenConfig.CAMPFIRE_REQUIRED_TICKS) {
-                            long currentTime = level.getGameTime();
-                            if (cap.getLastCampfireUseTick() < 0 || currentTime - cap.getLastCampfireUseTick() >= RegenConfig.CAMPFIRE_COOLDOWN_TICKS) {
+                            long currentDay = Math.max(0L, level.getDayTime()) / 24000L;
+                            long lastCampfireDay = cap.getLastCampfireUseTick() < 0 ? -1L : Math.max(0L, cap.getLastCampfireUseTick()) / 24000L;
+                            if (cap.getLastCampfireUseTick() < 0 || currentDay > lastCampfireDay) {
                                 cap.drainFatigue(RegenConfig.CAMPFIRE_REDUCTION);
-                                cap.setLastCampfireUseTick(currentTime);
+                                cap.setLastCampfireUseTick(level.getDayTime());
                                 FeedbackHelper.sendCampfireRest(player, RegenConfig.CAMPFIRE_REDUCTION);
                             }
                             cap.setCampfireTicks(0);
