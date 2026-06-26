@@ -28,6 +28,9 @@ public interface IRegenCap {
     long getLastBedUseTick();
     void setLastBedUseTick(long tick);
 
+    long getLastWaystoneUseTick();
+    void setLastWaystoneUseTick(long tick);
+
     int getCampfireTicks();
     void setCampfireTicks(int ticks);
 

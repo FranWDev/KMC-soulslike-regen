@@ -1,5 +1,6 @@
 package dev.franwdev.soulslikeregen.command;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -13,6 +14,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -22,8 +24,10 @@ import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 
+import dev.franwdev.soulslikeregen.api.event.FatigueResetEvent;
 import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
 import dev.franwdev.soulslikeregen.compat.FTBTeamsCompat;
 import dev.franwdev.soulslikeregen.config.RegenConfig;
@@ -32,6 +36,7 @@ import dev.franwdev.soulslikeregen.data.InnEntry;
 import dev.franwdev.soulslikeregen.data.NexusData;
 import dev.franwdev.soulslikeregen.data.NexusEntry;
 import dev.franwdev.soulslikeregen.feedback.FeedbackHelper;
+import dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper;
 
 public class SoulslikeRegenCommand {
 
@@ -61,12 +66,12 @@ public class SoulslikeRegenCommand {
             // --- Nexus Commands (Admin: Permission level 2) ---
             .then(literal("setTeamNexus")
                 .requires(src -> src.hasPermission(2))
-                .then(argument("coords", Vec3Argument.vec3())
+                .then(argument("coords", getVec3Argument())
                     .then(argument("radius", DoubleArgumentType.doubleArg(0.1))
                         .then(argument("teamName", StringArgumentType.string())
                             .executes(ctx -> executeSetNexus(
                                 ctx.getSource(),
-                                Vec3Argument.getVec3(ctx, "coords"),
+                                getVec3Coord(ctx, "coords"),
                                 DoubleArgumentType.getDouble(ctx, "radius"),
                                 StringArgumentType.getString(ctx, "teamName")
                              ))
@@ -87,11 +92,11 @@ public class SoulslikeRegenCommand {
                         )
                     )
                     .then(literal("coords")
-                        .then(argument("coords", Vec3Argument.vec3())
+                        .then(argument("coords", getVec3Argument())
                             .executes(ctx -> executeEditNexusCoords(
                                 ctx.getSource(),
                                 IntegerArgumentType.getInteger(ctx, "id"),
-                                Vec3Argument.getVec3(ctx, "coords")
+                                getVec3Coord(ctx, "coords")
                             ))
                         )
                     )
@@ -113,11 +118,11 @@ public class SoulslikeRegenCommand {
             // --- Inn Commands (Admin: Permission level 2) ---
             .then(literal("setInn")
                 .requires(src -> src.hasPermission(2))
-                .then(argument("coords", Vec3Argument.vec3())
+                .then(argument("coords", getVec3Argument())
                     .then(argument("radius", DoubleArgumentType.doubleArg(0.1))
                         .executes(ctx -> executeSetInn(
                             ctx.getSource(),
-                            Vec3Argument.getVec3(ctx, "coords"),
+                            getVec3Coord(ctx, "coords"),
                             DoubleArgumentType.getDouble(ctx, "radius")
                         ))
                     )
@@ -136,11 +141,11 @@ public class SoulslikeRegenCommand {
                         )
                     )
                     .then(literal("coords")
-                        .then(argument("coords", Vec3Argument.vec3())
+                        .then(argument("coords", getVec3Argument())
                             .executes(ctx -> executeEditInnCoords(
                                 ctx.getSource(),
                                 IntegerArgumentType.getInteger(ctx, "id"),
-                                Vec3Argument.getVec3(ctx, "coords")
+                                getVec3Coord(ctx, "coords")
                             ))
                         )
                     )
@@ -773,6 +778,12 @@ public class SoulslikeRegenCommand {
         ServerPlayer player = findPlayer(src, playerName);
         if (player == null) return 0;
 
+        FatigueResetEvent event = new FatigueResetEvent(player, FatigueResetEvent.ResetSource.COMMAND);
+        if (MinecraftForge.EVENT_BUS.post(event)) {
+            src.sendFailure(Component.literal("[SLRegen] Reset was canceled by another mod."));
+            return 0;
+        }
+
         RegenCapProvider.get(player).ifPresent(cap -> {
             cap.setCurrentFatigue(0.0f);
             cap.setMaxCap(RegenConfig.BASE_MAX_CAP);
@@ -782,7 +793,7 @@ public class SoulslikeRegenCommand {
             // cap.addFatigueSpent(-cap.getTotalFatigueSpent());
             src.sendSuccess(() -> Component.literal(String.format(
                 "[SLRegen] HARD RESET %s: fatigue=0, capacity=BASE (%.1f), level=0", 
-                playerName, dev.franwdev.soulslikeregen.config.RegenConfig.BASE_MAX_CAP
+                playerName, RegenConfig.BASE_MAX_CAP
             )), false);
         });
         return 1;
@@ -838,7 +849,7 @@ public class SoulslikeRegenCommand {
 
     private static Component translatable(CommandSourceStack src, String key, Object... args) {
         ServerPlayer player = src.getEntity() instanceof ServerPlayer p ? p : null;
-        return dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper.getComponent(player, key, args);
+        return ServerTranslationHelper.getComponent(player, key, args);
     }
 
     private static ServerPlayer findPlayer(CommandSourceStack src, String playerName) {
@@ -848,5 +859,40 @@ public class SoulslikeRegenCommand {
             return null;
         }
         return player;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ArgumentType<Object> getVec3Argument() {
+        try {
+            Class<?> clazz = Class.forName("net.minecraft.commands.arguments.coordinates.Vec3Argument");
+            for (Method method : clazz.getMethods()) {
+                if (java.lang.reflect.Modifier.isStatic(method.getModifiers()) &&
+                    method.getParameterCount() == 0 &&
+                    ArgumentType.class.isAssignableFrom(method.getReturnType())) {
+                    return (ArgumentType<Object>) method.invoke(null);
+                }
+            }
+            throw new NoSuchMethodException("No static factory method returning ArgumentType found on Vec3Argument");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get Vec3Argument via signature reflection", e);
+        }
+    }
+
+    private static Vec3 getVec3Coord(CommandContext<CommandSourceStack> ctx, String name) {
+        try {
+            Class<?> clazz = Class.forName("net.minecraft.commands.arguments.coordinates.Vec3Argument");
+            for (Method method : clazz.getMethods()) {
+                if (java.lang.reflect.Modifier.isStatic(method.getModifiers()) &&
+                    method.getParameterCount() == 2 &&
+                    method.getParameterTypes()[0].equals(CommandContext.class) &&
+                    method.getParameterTypes()[1].equals(String.class) &&
+                    Vec3.class.isAssignableFrom(method.getReturnType())) {
+                    return (Vec3) method.invoke(null, ctx, name);
+                }
+            }
+            throw new NoSuchMethodException("No static retriever method returning Vec3 found on Vec3Argument");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get Vec3 via signature reflection", e);
+        }
     }
 }

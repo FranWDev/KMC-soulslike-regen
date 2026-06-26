@@ -14,6 +14,7 @@ public class RegenCap implements IRegenCap {
     // Separate cooldown timestamps per rest source so they are independent
     private long  lastCampfireUseTick = -1L;
     private long  lastBedUseTick = -1L;
+    private long  lastWaystoneUseTick = -1L;
     // ── ActionBar Toggle (persisted) ───────────────────────────────────────
     private boolean actionBarEnabled = false;  // default: admin bar display off
 
@@ -58,6 +59,9 @@ public class RegenCap implements IRegenCap {
     @Override public long getLastBedUseTick() { return lastBedUseTick; }
     @Override public void setLastBedUseTick(long tick) { lastBedUseTick = tick; }
 
+    @Override public long getLastWaystoneUseTick() { return lastWaystoneUseTick; }
+    @Override public void setLastWaystoneUseTick(long tick) { lastWaystoneUseTick = tick; }
+
     @Override public int getCampfireTicks() { return campfireTicks; }
     @Override public void setCampfireTicks(int ticks) { campfireTicks = Math.max(0, ticks); }
 
@@ -91,6 +95,7 @@ public class RegenCap implements IRegenCap {
         tag.putBoolean("bonusClaimed",       bonusClaimed);
         tag.putLong("lastCampfireUseTick",   lastCampfireUseTick);
         tag.putLong("lastBedUseTick",        lastBedUseTick);
+        tag.putLong("lastWaystoneUseTick",   lastWaystoneUseTick);
         tag.putBoolean("actionBarEnabled",   actionBarEnabled);
         // campfireTicks and all other transient fields are intentionally NOT persisted.
         // Zone state resets on restart; losing a few seconds of campfire warmup is acceptable.
@@ -106,6 +111,7 @@ public class RegenCap implements IRegenCap {
         bonusClaimed         = tag.getBoolean("bonusClaimed");
         lastCampfireUseTick  = tag.contains("lastCampfireUseTick") ? tag.getLong("lastCampfireUseTick") : -1L;
         lastBedUseTick       = tag.contains("lastBedUseTick")      ? tag.getLong("lastBedUseTick")      : -1L;
+        lastWaystoneUseTick  = tag.contains("lastWaystoneUseTick") ? tag.getLong("lastWaystoneUseTick") : -1L;
         actionBarEnabled     = tag.contains("actionBarEnabled")    ? tag.getBoolean("actionBarEnabled")    : false;
     }
 }
