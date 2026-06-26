@@ -1,11 +1,13 @@
 package dev.franwdev.soulslikeregen.compat;
 
 import net.blay09.mods.waystones.api.WaystoneActivatedEvent;
-import net.blay09.mods.waystones.core.WarpMode;
-import net.blay09.mods.waystones.menu.WaystoneSelectionMenu;
+import net.blay09.mods.waystones.block.WaystoneBlockBase;
+import net.blay09.mods.waystones.block.PortstoneBlock;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerContainerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 
@@ -28,8 +30,8 @@ public class WaystonesCompat {
         RegenCapProvider.get(player).ifPresent(cap -> {
             long currentTick = player.level().getGameTime();
             long lastUse = cap.getLastWaystoneUseTick();
-            // 3 minutes = 180 seconds = 3600 ticks
-            if (lastUse != -1L && currentTick - lastUse < 3600L) {
+            // 30 seconds = 600 ticks
+            if (lastUse != -1L && currentTick - lastUse < 600L) {
                 return; // Cooldown active
             }
 
@@ -56,13 +58,11 @@ public class WaystonesCompat {
         }
 
         @SubscribeEvent
-        public void onContainerOpen(PlayerContainerEvent.Open event) {
-            if (event.getEntity() instanceof ServerPlayer player) {
-                if (event.getContainer() instanceof WaystoneSelectionMenu menu) {
-                    WarpMode mode = menu.getWarpMode();
-                    if (mode == WarpMode.WAYSTONE_TO_WAYSTONE ||
-                        mode == WarpMode.SHARESTONE_TO_SHARESTONE ||
-                        mode == WarpMode.PORTSTONE_TO_WAYSTONE) {
+        public void onBlockRightClick(PlayerInteractEvent.RightClickBlock event) {
+            if (event.getSide().isServer() && event.getEntity() instanceof ServerPlayer player) {
+                if (event.getHand() == InteractionHand.MAIN_HAND) {
+                    Block block = event.getLevel().getBlockState(event.getPos()).getBlock();
+                    if (block instanceof WaystoneBlockBase || block instanceof PortstoneBlock) {
                         applyWaystoneHeal(player);
                     }
                 }

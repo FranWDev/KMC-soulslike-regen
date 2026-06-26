@@ -6,9 +6,6 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
-import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
-import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
-import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.level.ServerPlayer;
 
 public class FeedbackHelper {
@@ -63,18 +60,7 @@ public class FeedbackHelper {
             .withStyle(ChatFormatting.AQUA);
     }
 
-    // ── Title ────────────────────────────────────────────────────────────────
-
-    private static void sendTitle(ServerPlayer player, Component title, Component subtitle) {
-        if (!canSend(player)) {
-            return;
-        }
-        player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 40, 10));
-        player.connection.send(new ClientboundSetTitleTextPacket(title));
-        if (subtitle != null) {
-            player.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
-        }
-    }
+    // ── Chat/System Messages ──────────────────────────────────────────────────
 
     private static void sendChat(ServerPlayer player, Component msg) {
         if (!canSend(player)) {
@@ -110,22 +96,11 @@ public class FeedbackHelper {
     }
 
     public static void sendFullyRested(ServerPlayer player, Component source) {
-        sendTitle(player,
-            ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.rest.full.title").withStyle(ChatFormatting.GREEN),
-            null
-        );
         sendChat(player, formatPrefix(ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.rest.full.chat", source), ChatFormatting.GREEN));
     }
 
     public static void sendLevelUp(ServerPlayer player, int newLevel, float newMaxCap, float increase) {
-        int oldMaxCap = (int) Math.round(newMaxCap - increase);
         int maxCapInt = (int) Math.round(newMaxCap);
-        
-        sendTitle(player,
-            ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.level_up.title").withStyle(ChatFormatting.GOLD),
-            ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.level_up.subtitle", String.valueOf(oldMaxCap), String.valueOf(maxCapInt))
-                .withStyle(ChatFormatting.YELLOW)
-        );
         sendChat(player, formatPrefix(ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.level_up.chat", String.valueOf(newLevel), String.valueOf(maxCapInt)), ChatFormatting.GOLD));
     }
 
