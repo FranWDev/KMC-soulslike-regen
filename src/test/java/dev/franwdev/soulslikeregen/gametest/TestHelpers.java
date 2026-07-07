@@ -93,7 +93,7 @@ public class TestHelpers {
     public static void registerInn(GameTestHelper helper, BlockPos pos, float radius) {
         ServerLevel level = (ServerLevel) helper.getLevel();
         InnData innData = InnData.get(level);
-        innData.addInn(pos.getX(), pos.getY(), pos.getZ(), radius, level.dimension());
+        innData.addInn("test_inn", pos.getX(), pos.getY(), pos.getZ(), radius, level.dimension());
     }
 
     /**

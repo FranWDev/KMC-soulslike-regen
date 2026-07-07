@@ -11,6 +11,8 @@ import net.minecraft.world.level.saveddata.SavedData;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.List;
 
 public class InnData extends SavedData {
     private static final String FILE_NAME = "soulslikeregen_inn";
@@ -52,45 +54,61 @@ public class InnData extends SavedData {
         return tag;
     }
 
-    public InnEntry addInn(double x, double y, double z, double radius, ResourceKey<Level> dimension) {
+    public InnEntry addInn(String name, double x, double y, double z, double radius, ResourceKey<Level> dimension) {
         int id = nextId++;
-        InnEntry entry = new InnEntry(id, x, y, z, radius, dimension);
+        InnEntry entry = new InnEntry(id, name, x, y, z, radius, dimension);
         inns.put(id, entry);
         setDirty();
         return entry;
     }
 
-    public boolean removeInn(int id) {
-        if (inns.containsKey(id)) {
-            inns.remove(id);
+    public boolean removeInnByName(String name) {
+        Optional<InnEntry> opt = getInnByName(name);
+        if (opt.isPresent()) {
+            inns.remove(opt.get().id());
             setDirty();
             return true;
         }
         return false;
     }
 
-    public boolean updateInnRadius(int id, double radius) {
-        InnEntry old = inns.get(id);
-        if (old != null) {
-            inns.put(id, new InnEntry(id, old.x(), old.y(), old.z(), radius, old.dimension()));
+    public boolean updateInnRadiusByName(String name, double radius) {
+        Optional<InnEntry> opt = getInnByName(name);
+        if (opt.isPresent()) {
+            InnEntry old = opt.get();
+            inns.put(old.id(), new InnEntry(old.id(), old.name(), old.x(), old.y(), old.z(), radius, old.dimension()));
             setDirty();
             return true;
         }
         return false;
     }
 
-    public boolean updateInnCoords(int id, double x, double y, double z) {
-        InnEntry old = inns.get(id);
-        if (old != null) {
-            inns.put(id, new InnEntry(id, x, y, z, old.radius(), old.dimension()));
+    public boolean updateInnCoordsByName(String name, double x, double y, double z) {
+        Optional<InnEntry> opt = getInnByName(name);
+        if (opt.isPresent()) {
+            InnEntry old = opt.get();
+            inns.put(old.id(), new InnEntry(old.id(), old.name(), x, y, z, old.radius(), old.dimension()));
             setDirty();
             return true;
         }
         return false;
     }
 
-    public InnEntry getInn(int id) {
-        return inns.get(id);
+    public Optional<InnEntry> getInnByName(String name) {
+        return inns.values().stream()
+            .filter(inn -> inn.name().equals(name))
+            .findFirst();
+    }
+
+    public boolean hasInnWithName(String name) {
+        return inns.values().stream()
+            .anyMatch(inn -> inn.name().equals(name));
+    }
+
+    public List<String> getAllInnNames() {
+        return inns.values().stream()
+            .map(InnEntry::name)
+            .toList();
     }
 
     public Collection<InnEntry> getAllInns() {

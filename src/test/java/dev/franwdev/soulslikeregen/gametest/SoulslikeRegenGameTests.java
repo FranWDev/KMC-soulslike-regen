@@ -21,6 +21,9 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import dev.franwdev.soulslikeregen.capability.IRegenCap;
 import dev.franwdev.soulslikeregen.config.RegenConfig;
+import dev.franwdev.soulslikeregen.data.NexusData;
+import dev.franwdev.soulslikeregen.data.InnData;
+import dev.franwdev.soulslikeregen.compat.FTBTeamsCompat;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
@@ -894,6 +897,10 @@ public class SoulslikeRegenGameTests {
         TestDataStub.setPlayerTeam(UUID.randomUUID(), UUID.randomUUID(), "TestTeamAlpha");
         TestDataStub.setPlayerTeam(UUID.randomUUID(), UUID.randomUUID(), "TestTeamBeta");
 
+        // Pre-register Nexus and Inn to get their suggestions
+        NexusData.get(helper.getLevel()).upsertNexus(0, 0, 0, 5, helper.getLevel().dimension(), UUID.randomUUID(), "TestTeamAlpha");
+        InnData.get(helper.getLevel()).addInn("TestInnAlpha", 0, 0, 0, 5, helper.getLevel().dimension());
+
         UUID playerId = UUID.randomUUID();
         ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayerOne");
 
@@ -905,10 +912,10 @@ public class SoulslikeRegenGameTests {
 
         try {
             System.out.println("DEBUG: testMode system property = " + System.getProperty("soulslikeregen.testMode"));
-            System.out.println("DEBUG: FTBTeamsCompat.isLoaded() = " + dev.franwdev.soulslikeregen.compat.FTBTeamsCompat.isLoaded());
-            System.out.println("DEBUG: FTBTeamsCompat.getAllPartyTeamNames() = " + dev.franwdev.soulslikeregen.compat.FTBTeamsCompat.getAllPartyTeamNames());
+            System.out.println("DEBUG: FTBTeamsCompat.isLoaded() = " + FTBTeamsCompat.isLoaded());
+            System.out.println("DEBUG: FTBTeamsCompat.getAllPartyTeamNames() = " + FTBTeamsCompat.getAllPartyTeamNames());
 
-            // 1. Test teamName suggestion
+            // 1. Test teamName suggestion in setTeamNexus
             ParseResults<CommandSourceStack> parseTeam = dispatcher.parse("soulslikeregen setTeamNexus 0 0 0 5 ", source);
             try {
                 Suggestions suggestions = dispatcher.getCompletionSuggestions(parseTeam).get();
@@ -922,7 +929,33 @@ public class SoulslikeRegenGameTests {
                 helper.fail("Failed to get completion suggestions for teamName: " + e.getMessage());
             }
 
-            // 2. Test playerName suggestion
+            // 2. Test teamName suggestion in editTeamNexus
+            ParseResults<CommandSourceStack> parseEditTeam = dispatcher.parse("soulslikeregen editTeamNexus ", source);
+            try {
+                Suggestions suggestions = dispatcher.getCompletionSuggestions(parseEditTeam).get();
+                List<String> list = suggestions.getList().stream()
+                    .map(Suggestion::getText)
+                    .toList();
+                System.out.println("DEBUG: editTeamNexus suggestions = " + list);
+                TestHelpers.assertTrue(helper, list.contains("TestTeamAlpha"), "Expected 'TestTeamAlpha' in editTeamNexus suggestions, got: " + list);
+            } catch (Exception e) {
+                helper.fail("Failed to get completion suggestions for editTeamNexus: " + e.getMessage());
+            }
+
+            // 3. Test inn name suggestion in editInn
+            ParseResults<CommandSourceStack> parseEditInn = dispatcher.parse("soulslikeregen editInn ", source);
+            try {
+                Suggestions suggestions = dispatcher.getCompletionSuggestions(parseEditInn).get();
+                List<String> list = suggestions.getList().stream()
+                    .map(Suggestion::getText)
+                    .toList();
+                System.out.println("DEBUG: editInn suggestions = " + list);
+                TestHelpers.assertTrue(helper, list.contains("TestInnAlpha"), "Expected 'TestInnAlpha' in editInn suggestions, got: " + list);
+            } catch (Exception e) {
+                helper.fail("Failed to get completion suggestions for editInn: " + e.getMessage());
+            }
+
+            // 4. Test playerName suggestion
             ParseResults<CommandSourceStack> parsePlayer = dispatcher.parse("soulslikeregen player ", source);
             try {
                 Suggestions suggestions = dispatcher.getCompletionSuggestions(parsePlayer).get();

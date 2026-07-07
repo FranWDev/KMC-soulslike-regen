@@ -2,41 +2,52 @@
   "msg.soulslikeregen.exhausted.title": "⚠ Capacidad Agotada",
   "msg.soulslikeregen.exhausted.subtitle": "Regeneración natural bloqueada",
   "msg.soulslikeregen.exhausted.chat": "Tu capacidad de regeneración está llena. Busca una zona de descanso (Nexo, Posada, Hoguera, Cama, Piedra de Viaje) para recuperarte.",
+  
   "msg.soulslikeregen.nexus.entered": "Estás en el Nexo de tu equipo. Recuperando fatiga...",
   "msg.soulslikeregen.nexus.left": "Has salido del Nexo.",
+  
   "msg.soulslikeregen.inn.warmup": "Estás en una zona de descanso. La recuperación comenzará en %s segundos.",
   "msg.soulslikeregen.inn.drain": "Zona de descanso activa. Recuperando fatiga...",
+  
   "msg.soulslikeregen.rest.full.title": "✔ Completamente Descansado",
   "msg.soulslikeregen.rest.full.chat": "Tu fatiga se ha limpiado por completo en %s.",
+  
   "msg.soulslikeregen.level_up.title": "⬆ ¡Subida de Nivel!",
   "msg.soulslikeregen.level_up.subtitle": "Capacidad de regeneración: %s → %s medios corazones",
   "msg.soulslikeregen.level_up.chat": "¡Has alcanzado el nivel %s! La capacidad máxima ha aumentado a %s.",
+  
   "msg.soulslikeregen.bonus.day": "✦ Has sobrevivido un día entero sin recibir daño. Fatiga reducida en %s.",
   "msg.soulslikeregen.bonus.bed": "Has descansado en una cama. Fatiga reducida en %s.",
   "msg.soulslikeregen.bonus.campfire": "Has descansado junto a una hoguera. Fatiga reducida en %s.",
   "msg.soulslikeregen.bonus.waystone": "Has activado una Piedra de Viaje. Fatiga limpiada por completo.",
+  
   "msg.soulslikeregen.actionbar.normal": "Regen: [%s %s/%s]",
   "msg.soulslikeregen.actionbar.level": "Regen: [%s %s/%s] Nv.%s",
   "msg.soulslikeregen.actionbar.exhausted": "⚠ AGOTADO [%s %s/%s] — Busca descanso",
+  
   "msg.soulslikeregen.source.waystone": "Piedra de Viaje",
   "msg.soulslikeregen.source.command": "Comando de Administrador",
   "msg.soulslikeregen.source.nexus": "Nexo de Equipo",
   "msg.soulslikeregen.source.inn": "Posada",
-  "msg.soulslikeregen.command.nexus.set": "Se ha creado el Nexo de Equipo #%s para el equipo '%s' en las coordenadas [%s, %s, %s] con un radio de %s.",
-  "msg.soulslikeregen.command.nexus.edit_radius": "Se ha actualizado el radio del Nexo #%s a %s.",
-  "msg.soulslikeregen.command.nexus.edit_coords": "Se han actualizado las coordenadas del Nexo #%s a [%s, %s, %s].",
-  "msg.soulslikeregen.command.nexus.remove": "Se ha eliminado el Nexo #%s.",
-  "msg.soulslikeregen.command.nexus.not_found": "No se encontró ningún Nexo con el ID %s.",
+  
+  "msg.soulslikeregen.command.nexus.set": "Se ha creado el Nexo de Equipo para el equipo '%s' en las coordenadas [%s, %s, %s] con un radio de %s.",
+  "msg.soulslikeregen.command.nexus.edit_radius": "Se ha actualizado el radio del Nexo del equipo '%s' a %s.",
+  "msg.soulslikeregen.command.nexus.edit_coords": "Se han actualizado las coordenadas del Nexo del equipo '%s' a [%s, %s, %s].",
+  "msg.soulslikeregen.command.nexus.remove": "Se ha eliminado el Nexo del equipo '%s'.",
+  "msg.soulslikeregen.command.nexus.not_found": "No se encontró ningún Nexo para el equipo '%s'.",
   "msg.soulslikeregen.command.nexus.team_not_found": "No se encontró el equipo '%s'. Por favor, verifica el nombre del equipo.",
   "msg.soulslikeregen.command.nexus.list_title": "--- Nexos de Equipo (Página %s/%s) ---",
-  "msg.soulslikeregen.command.nexus.list_item": "#%s: Equipo '%s' en [%s, %s, %s] (Radio: %s) en %s",
-  "msg.soulslikeregen.command.inn.set": "Se ha creado la Posada #%s en las coordenadas [%s, %s, %s] con un radio de %s.",
-  "msg.soulslikeregen.command.inn.edit_radius": "Se ha actualizado el radio de la Posada #%s a %s.",
-  "msg.soulslikeregen.command.inn.edit_coords": "Se han actualizado las coordenadas de la Posada #%s a [%s, %s, %s].",
-  "msg.soulslikeregen.command.inn.remove": "Se ha eliminado la Posada #%s.",
-  "msg.soulslikeregen.command.inn.not_found": "No se encontró ninguna Posada con el ID %s.",
+  "msg.soulslikeregen.command.nexus.list_item": "Equipo '%s' en [%s, %s, %s] (Radio: %s) en %s",
+  
+  "msg.soulslikeregen.command.inn.set": "Se ha creado la Posada '%s' en las coordenadas [%s, %s, %s] con un radio de %s.",
+  "msg.soulslikeregen.command.inn.name_taken": "Ya existe una Posada con el nombre '%s'.",
+  "msg.soulslikeregen.command.inn.edit_radius": "Se ha actualizado el radio de la Posada '%s' a %s.",
+  "msg.soulslikeregen.command.inn.edit_coords": "Se han actualizado las coordenadas de la Posada '%s' a [%s, %s, %s].",
+  "msg.soulslikeregen.command.inn.remove": "Se ha eliminado la Posada '%s'.",
+  "msg.soulslikeregen.command.inn.not_found": "No se encontró ninguna Posada con el nombre '%s'.",
   "msg.soulslikeregen.command.inn.list_title": "--- Posadas (Página %s/%s) ---",
-  "msg.soulslikeregen.command.inn.list_item": "#%s: Coordenadas [%s, %s, %s] (Radio: %s) en %s",
+  "msg.soulslikeregen.command.inn.list_item": "'%s': Coordenadas [%s, %s, %s] (Radio: %s) en %s",
+  
   "msg.soulslikeregen.command.no_permission": "No tienes permiso para ejecutar este comando.",
   "msg.soulslikeregen.command.only_player": "Solo los jugadores pueden ejecutar este subcomando."
 }

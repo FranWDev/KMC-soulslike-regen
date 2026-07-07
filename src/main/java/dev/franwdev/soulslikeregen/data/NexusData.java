@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Optional;
+import java.util.List;
 
 public class NexusData extends SavedData {
     private static final String FILE_NAME = "soulslikeregen_nexus";
@@ -61,37 +63,61 @@ public class NexusData extends SavedData {
         return entry;
     }
 
-    public boolean removeNexus(int id) {
-        if (nexuses.containsKey(id)) {
-            nexuses.remove(id);
+    public NexusEntry upsertNexus(double x, double y, double z, double radius, ResourceKey<Level> dimension, UUID teamId, String teamName) {
+        Optional<NexusEntry> existing = getNexusByTeamName(teamName);
+        if (existing.isPresent()) {
+            int id = existing.get().id();
+            NexusEntry entry = new NexusEntry(id, x, y, z, radius, dimension, teamId, teamName);
+            nexuses.put(id, entry);
+            setDirty();
+            return entry;
+        } else {
+            return addNexus(x, y, z, radius, dimension, teamId, teamName);
+        }
+    }
+
+    public boolean removeNexusByTeamName(String teamName) {
+        Optional<NexusEntry> opt = getNexusByTeamName(teamName);
+        if (opt.isPresent()) {
+            nexuses.remove(opt.get().id());
             setDirty();
             return true;
         }
         return false;
     }
 
-    public boolean updateNexusRadius(int id, double radius) {
-        NexusEntry old = nexuses.get(id);
-        if (old != null) {
-            nexuses.put(id, new NexusEntry(id, old.x(), old.y(), old.z(), radius, old.dimension(), old.teamId(), old.teamName()));
+    public boolean updateNexusRadiusByTeamName(String teamName, double radius) {
+        Optional<NexusEntry> opt = getNexusByTeamName(teamName);
+        if (opt.isPresent()) {
+            NexusEntry old = opt.get();
+            nexuses.put(old.id(), new NexusEntry(old.id(), old.x(), old.y(), old.z(), radius, old.dimension(), old.teamId(), old.teamName()));
             setDirty();
             return true;
         }
         return false;
     }
 
-    public boolean updateNexusCoords(int id, double x, double y, double z) {
-        NexusEntry old = nexuses.get(id);
-        if (old != null) {
-            nexuses.put(id, new NexusEntry(id, x, y, z, old.radius(), old.dimension(), old.teamId(), old.teamName()));
+    public boolean updateNexusCoordsByTeamName(String teamName, double x, double y, double z) {
+        Optional<NexusEntry> opt = getNexusByTeamName(teamName);
+        if (opt.isPresent()) {
+            NexusEntry old = opt.get();
+            nexuses.put(old.id(), new NexusEntry(old.id(), x, y, z, old.radius(), old.dimension(), old.teamId(), old.teamName()));
             setDirty();
             return true;
         }
         return false;
     }
 
-    public NexusEntry getNexus(int id) {
-        return nexuses.get(id);
+    public Optional<NexusEntry> getNexusByTeamName(String teamName) {
+        return nexuses.values().stream()
+            .filter(n -> n.teamName().equals(teamName))
+            .findFirst();
+    }
+
+    public List<String> getAllNexusTeamNames() {
+        return nexuses.values().stream()
+            .map(NexusEntry::teamName)
+            .toList();
     }
 
     public Collection<NexusEntry> getAllNexuses() {

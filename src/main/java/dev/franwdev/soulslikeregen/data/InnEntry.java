@@ -8,6 +8,7 @@ import net.minecraft.world.level.Level;
 
 public record InnEntry(
     int id,
+    String name,
     double x,
     double y,
     double z,
@@ -17,6 +18,7 @@ public record InnEntry(
     public CompoundTag toNBT() {
         CompoundTag tag = new CompoundTag();
         tag.putInt("id", id);
+        tag.putString("name", name);
         tag.putDouble("x", x);
         tag.putDouble("y", y);
         tag.putDouble("z", z);
@@ -27,6 +29,7 @@ public record InnEntry(
 
     public static InnEntry fromNBT(CompoundTag tag) {
         int id = tag.getInt("id");
+        String name = tag.contains("name") ? tag.getString("name") : "inn_" + id;
         double x = tag.getDouble("x");
         double y = tag.getDouble("y");
         double z = tag.getDouble("z");
@@ -35,6 +38,6 @@ public record InnEntry(
             Registries.DIMENSION,
             new ResourceLocation(tag.getString("dimension"))
         );
-        return new InnEntry(id, x, y, z, radius, dim);
+        return new InnEntry(id, name, x, y, z, radius, dim);
     }
 }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -17,7 +18,6 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
@@ -86,12 +86,20 @@ public class SoulslikeRegenCommand {
             )
             .then(literal("editTeamNexus")
                 .requires(src -> src.hasPermission(2))
-                .then(argument("id", IntegerArgumentType.integer(1))
+                .then(argument("teamName", StringArgumentType.string())
+                    .suggests((ctx, builder) -> {
+                        try {
+                            NexusData.get(ctx.getSource().getLevel())
+                                .getAllNexusTeamNames()
+                                .forEach(builder::suggest);
+                        } catch (Exception ignored) {}
+                        return builder.buildFuture();
+                    })
                     .then(literal("radius")
                         .then(argument("newRadius", DoubleArgumentType.doubleArg(0.1))
                             .executes(ctx -> executeEditNexusRadius(
                                 ctx.getSource(),
-                                IntegerArgumentType.getInteger(ctx, "id"),
+                                StringArgumentType.getString(ctx, "teamName"),
                                 DoubleArgumentType.getDouble(ctx, "newRadius")
                             ))
                         )
@@ -100,7 +108,7 @@ public class SoulslikeRegenCommand {
                         .then(argument("coords", getVec3Argument())
                             .executes(ctx -> executeEditNexusCoords(
                                 ctx.getSource(),
-                                IntegerArgumentType.getInteger(ctx, "id"),
+                                StringArgumentType.getString(ctx, "teamName"),
                                 getVec3Coord(ctx, "coords")
                             ))
                         )
@@ -109,8 +117,19 @@ public class SoulslikeRegenCommand {
             )
             .then(literal("removeTeamNexus")
                 .requires(src -> src.hasPermission(2))
-                .then(argument("id", IntegerArgumentType.integer(1))
-                    .executes(ctx -> executeRemoveNexus(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "id")))
+                .then(argument("teamName", StringArgumentType.string())
+                    .suggests((ctx, builder) -> {
+                        try {
+                            NexusData.get(ctx.getSource().getLevel())
+                                .getAllNexusTeamNames()
+                                .forEach(builder::suggest);
+                        } catch (Exception ignored) {}
+                        return builder.buildFuture();
+                    })
+                    .executes(ctx -> executeRemoveNexus(
+                        ctx.getSource(),
+                        StringArgumentType.getString(ctx, "teamName")
+                    ))
                 )
             )
             .then(literal("listNexus")
@@ -125,22 +144,33 @@ public class SoulslikeRegenCommand {
                 .requires(src -> src.hasPermission(2))
                 .then(argument("coords", getVec3Argument())
                     .then(argument("radius", DoubleArgumentType.doubleArg(0.1))
-                        .executes(ctx -> executeSetInn(
-                            ctx.getSource(),
-                            getVec3Coord(ctx, "coords"),
-                            DoubleArgumentType.getDouble(ctx, "radius")
-                        ))
+                        .then(argument("name", StringArgumentType.word())
+                            .executes(ctx -> executeSetInn(
+                                ctx.getSource(),
+                                getVec3Coord(ctx, "coords"),
+                                DoubleArgumentType.getDouble(ctx, "radius"),
+                                StringArgumentType.getString(ctx, "name")
+                            ))
+                        )
                     )
                 )
             )
             .then(literal("editInn")
                 .requires(src -> src.hasPermission(2))
-                .then(argument("id", IntegerArgumentType.integer(1))
+                .then(argument("name", StringArgumentType.word())
+                    .suggests((ctx, builder) -> {
+                        try {
+                            InnData.get(ctx.getSource().getLevel())
+                                .getAllInnNames()
+                                .forEach(builder::suggest);
+                        } catch (Exception ignored) {}
+                        return builder.buildFuture();
+                    })
                     .then(literal("radius")
                         .then(argument("newRadius", DoubleArgumentType.doubleArg(0.1))
                             .executes(ctx -> executeEditInnRadius(
                                 ctx.getSource(),
-                                IntegerArgumentType.getInteger(ctx, "id"),
+                                StringArgumentType.getString(ctx, "name"),
                                 DoubleArgumentType.getDouble(ctx, "newRadius")
                             ))
                         )
@@ -149,7 +179,7 @@ public class SoulslikeRegenCommand {
                         .then(argument("coords", getVec3Argument())
                             .executes(ctx -> executeEditInnCoords(
                                 ctx.getSource(),
-                                IntegerArgumentType.getInteger(ctx, "id"),
+                                StringArgumentType.getString(ctx, "name"),
                                 getVec3Coord(ctx, "coords")
                             ))
                         )
@@ -158,8 +188,19 @@ public class SoulslikeRegenCommand {
             )
             .then(literal("removeInn")
                 .requires(src -> src.hasPermission(2))
-                .then(argument("id", IntegerArgumentType.integer(1))
-                    .executes(ctx -> executeRemoveInn(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "id")))
+                .then(argument("name", StringArgumentType.word())
+                    .suggests((ctx, builder) -> {
+                        try {
+                            InnData.get(ctx.getSource().getLevel())
+                                .getAllInnNames()
+                                .forEach(builder::suggest);
+                        } catch (Exception ignored) {}
+                        return builder.buildFuture();
+                    })
+                    .executes(ctx -> executeRemoveInn(
+                        ctx.getSource(),
+                        StringArgumentType.getString(ctx, "name")
+                    ))
                 )
             )
             .then(literal("listInns")
@@ -188,7 +229,7 @@ public class SoulslikeRegenCommand {
                         )
                         .then(literal("set")
                             .then(argument("amount", DoubleArgumentType.doubleArg(0))
-                                .executes(ctx -> executePlayerFatigueSet(
+                               .executes(ctx -> executePlayerFatigueSet(
                                     ctx.getSource(),
                                     StringArgumentType.getString(ctx, "playerName"),
                                     (float) DoubleArgumentType.getDouble(ctx, "amount")
@@ -360,11 +401,10 @@ public class SoulslikeRegenCommand {
         }
 
         NexusData data = NexusData.get(level);
-        NexusEntry entry = data.addNexus(coords.x, coords.y, coords.z, radius, level.dimension(), teamId, teamName);
+        NexusEntry entry = data.upsertNexus(coords.x, coords.y, coords.z, radius, level.dimension(), teamId, teamName);
 
         src.sendSuccess(() -> translatable(src,
             "msg.soulslikeregen.command.nexus.set",
-            String.valueOf(entry.id()),
             teamName,
             String.valueOf((int) coords.x),
             String.valueOf((int) coords.y),
@@ -375,48 +415,48 @@ public class SoulslikeRegenCommand {
         return 1;
     }
 
-    private static int executeEditNexusRadius(CommandSourceStack src, int id, double newRadius) {
+    private static int executeEditNexusRadius(CommandSourceStack src, String teamName, double newRadius) {
         ServerLevel level = src.getLevel();
         NexusData data = NexusData.get(level);
-        if (data.updateNexusRadius(id, newRadius)) {
+        if (data.updateNexusRadiusByTeamName(teamName, newRadius)) {
             src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.nexus.edit_radius",
-                String.valueOf(id),
+                teamName,
                 String.format("%.1f", newRadius)
             ), true);
             return 1;
         } else {
-            src.sendFailure(translatable(src, "msg.soulslikeregen.command.nexus.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.nexus.not_found", teamName));
             return 0;
         }
     }
 
-    private static int executeEditNexusCoords(CommandSourceStack src, int id, Vec3 coords) {
+    private static int executeEditNexusCoords(CommandSourceStack src, String teamName, Vec3 coords) {
         ServerLevel level = src.getLevel();
         NexusData data = NexusData.get(level);
-        if (data.updateNexusCoords(id, coords.x, coords.y, coords.z)) {
+        if (data.updateNexusCoordsByTeamName(teamName, coords.x, coords.y, coords.z)) {
             src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.nexus.edit_coords",
-                String.valueOf(id),
+                teamName,
                 String.valueOf((int) coords.x),
                 String.valueOf((int) coords.y),
                 String.valueOf((int) coords.z)
             ), true);
             return 1;
         } else {
-            src.sendFailure(translatable(src, "msg.soulslikeregen.command.nexus.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.nexus.not_found", teamName));
             return 0;
         }
     }
 
-    private static int executeRemoveNexus(CommandSourceStack src, int id) {
+    private static int executeRemoveNexus(CommandSourceStack src, String teamName) {
         ServerLevel level = src.getLevel();
         NexusData data = NexusData.get(level);
-        if (data.removeNexus(id)) {
-            src.sendSuccess(() -> translatable(src, "msg.soulslikeregen.command.nexus.remove", String.valueOf(id)), true);
+        if (data.removeNexusByTeamName(teamName)) {
+            src.sendSuccess(() -> translatable(src, "msg.soulslikeregen.command.nexus.remove", teamName), true);
             return 1;
         } else {
-            src.sendFailure(translatable(src, "msg.soulslikeregen.command.nexus.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.nexus.not_found", teamName));
             return 0;
         }
     }
@@ -449,7 +489,6 @@ public class SoulslikeRegenCommand {
             NexusEntry entry = list.get(i);
             src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.nexus.list_item",
-                String.valueOf(entry.id()),
                 entry.teamName(),
                 String.valueOf((int) entry.x()),
                 String.valueOf((int) entry.y()),
@@ -462,14 +501,18 @@ public class SoulslikeRegenCommand {
         return 1;
     }
 
-    private static int executeSetInn(CommandSourceStack src, Vec3 coords, double radius) {
+    private static int executeSetInn(CommandSourceStack src, Vec3 coords, double radius, String name) {
         ServerLevel level = src.getLevel();
         InnData data = InnData.get(level);
-        InnEntry entry = data.addInn(coords.x, coords.y, coords.z, radius, level.dimension());
+        if (data.hasInnWithName(name)) {
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.inn.name_taken", name));
+            return 0;
+        }
+        InnEntry entry = data.addInn(name, coords.x, coords.y, coords.z, radius, level.dimension());
 
         src.sendSuccess(() -> translatable(src,
             "msg.soulslikeregen.command.inn.set",
-            String.valueOf(entry.id()),
+            name,
             String.valueOf((int) coords.x),
             String.valueOf((int) coords.y),
             String.valueOf((int) coords.z),
@@ -479,48 +522,48 @@ public class SoulslikeRegenCommand {
         return 1;
     }
 
-    private static int executeEditInnRadius(CommandSourceStack src, int id, double newRadius) {
+    private static int executeEditInnRadius(CommandSourceStack src, String name, double newRadius) {
         ServerLevel level = src.getLevel();
         InnData data = InnData.get(level);
-        if (data.updateInnRadius(id, newRadius)) {
+        if (data.updateInnRadiusByName(name, newRadius)) {
             src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.inn.edit_radius",
-                String.valueOf(id),
+                name,
                 String.format("%.1f", newRadius)
             ), true);
             return 1;
         } else {
-            src.sendFailure(translatable(src, "msg.soulslikeregen.command.inn.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.inn.not_found", name));
             return 0;
         }
     }
 
-    private static int executeEditInnCoords(CommandSourceStack src, int id, Vec3 coords) {
+    private static int executeEditInnCoords(CommandSourceStack src, String name, Vec3 coords) {
         ServerLevel level = src.getLevel();
         InnData data = InnData.get(level);
-        if (data.updateInnCoords(id, coords.x, coords.y, coords.z)) {
+        if (data.updateInnCoordsByName(name, coords.x, coords.y, coords.z)) {
             src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.inn.edit_coords",
-                String.valueOf(id),
+                name,
                 String.valueOf((int) coords.x),
                 String.valueOf((int) coords.y),
                 String.valueOf((int) coords.z)
             ), true);
             return 1;
         } else {
-            src.sendFailure(translatable(src, "msg.soulslikeregen.command.inn.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.inn.not_found", name));
             return 0;
         }
     }
 
-    private static int executeRemoveInn(CommandSourceStack src, int id) {
+    private static int executeRemoveInn(CommandSourceStack src, String name) {
         ServerLevel level = src.getLevel();
         InnData data = InnData.get(level);
-        if (data.removeInn(id)) {
-            src.sendSuccess(() -> translatable(src, "msg.soulslikeregen.command.inn.remove", String.valueOf(id)), true);
+        if (data.removeInnByName(name)) {
+            src.sendSuccess(() -> translatable(src, "msg.soulslikeregen.command.inn.remove", name), true);
             return 1;
         } else {
-            src.sendFailure(translatable(src, "msg.soulslikeregen.command.inn.not_found", String.valueOf(id)));
+            src.sendFailure(translatable(src, "msg.soulslikeregen.command.inn.not_found", name));
             return 0;
         }
     }
@@ -553,7 +596,7 @@ public class SoulslikeRegenCommand {
             InnEntry entry = list.get(i);
             src.sendSuccess(() -> translatable(src,
                 "msg.soulslikeregen.command.inn.list_item",
-                String.valueOf(entry.id()),
+                entry.name(),
                 String.valueOf((int) entry.x()),
                 String.valueOf((int) entry.y()),
                 String.valueOf((int) entry.z()),
@@ -688,7 +731,6 @@ public class SoulslikeRegenCommand {
         RegenCapProvider.get(player).ifPresent(cap -> {
             int before = cap.getCurrentLevel();
             cap.setCurrentLevel(Math.max(0, level));
-            int maxCap = (int) cap.getMaxCap();
             src.sendSuccess(() -> Component.literal(String.format(
                 "[SLRegen] Set %s's level from %d to %d (max capacity: %.1f)", playerName, before, level, cap.getMaxCap()
             )), false);
@@ -798,9 +840,6 @@ public class SoulslikeRegenCommand {
             cap.setCurrentFatigue(0.0f);
             cap.setMaxCap(RegenConfig.BASE_MAX_CAP);
             cap.setCurrentLevel(0);
-            // Note: totalFatigueSpent is NOT reset — it's cumulative progression tracking
-            // If you want to reset that too, uncomment the next line:
-            // cap.addFatigueSpent(-cap.getTotalFatigueSpent());
             src.sendSuccess(() -> Component.literal(String.format(
                 "[SLRegen] HARD RESET %s: fatigue=0, capacity=BASE (%.1f), level=0", 
                 playerName, RegenConfig.BASE_MAX_CAP
