@@ -37,6 +37,8 @@ public class ServerEventHandler {
                 newCap.setBonusClaimed(oldCap.isBonusClaimed());
                 newCap.setLastCampfireUseTick(oldCap.getLastCampfireUseTick());
                 newCap.setLastBedUseTick(oldCap.getLastBedUseTick());
+                newCap.setLastWaystoneUseTick(oldCap.getLastWaystoneUseTick());
+                newCap.setActionBarEnabled(oldCap.isActionBarEnabled());
             });
         });
         oldPlayer.invalidateCaps();

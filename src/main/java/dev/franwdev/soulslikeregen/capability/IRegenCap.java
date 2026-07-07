@@ -53,6 +53,9 @@ public interface IRegenCap {
     boolean isActionBarEnabled();
     void setActionBarEnabled(boolean enabled);
 
+    int getFullyRestedMessageCooldown();
+    void setFullyRestedMessageCooldown(int ticks);
+
     /** Returns true when currentFatigue >= maxCap (healing is blocked). */
     default boolean isExhausted() {
         return getCurrentFatigue() >= getMaxCap();

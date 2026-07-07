@@ -28,6 +28,8 @@ import dev.franwdev.soulslikeregen.level.LevelUpHandler;
 @Mod.EventBusSubscriber(modid = SoulslikeRegen.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class PlayerTickHandler {
 
+    private static final int FULLY_RESTED_MSG_COOLDOWN_TICKS = 1200; // 60 s
+
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.side != LogicalSide.SERVER || event.phase != TickEvent.Phase.END) {
@@ -46,6 +48,9 @@ public class PlayerTickHandler {
                 // 2. Cooldown decrements
                 if (cap.getExhaustedMessageCooldown() > 0) {
                     cap.setExhaustedMessageCooldown(cap.getExhaustedMessageCooldown() - 1);
+                }
+                if (cap.getFullyRestedMessageCooldown() > 0) {
+                    cap.setFullyRestedMessageCooldown(cap.getFullyRestedMessageCooldown() - 1);
                 }
 
                 // 3. Detect healing and apply fatigue
@@ -123,8 +128,9 @@ public class PlayerTickHandler {
                     }
                     if (player.tickCount % RegenConfig.NEXUS_DRAIN_INTERVAL_TICKS == 0) {
                         float drained = cap.drainFatigue(RegenConfig.NEXUS_DRAIN_RATE);
-                        if (drained > 0 && cap.getCurrentFatigue() == 0) {
+                        if (drained > 0 && cap.getCurrentFatigue() == 0 && cap.getFullyRestedMessageCooldown() == 0) {
                             FeedbackHelper.sendFullyRested(player, dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.source.nexus"));
+                            cap.setFullyRestedMessageCooldown(FULLY_RESTED_MSG_COOLDOWN_TICKS);
                         }
                     }
                 } else {
@@ -148,8 +154,9 @@ public class PlayerTickHandler {
                     } else {
                         if (player.tickCount % RegenConfig.INN_DRAIN_INTERVAL_TICKS == 0) {
                             float drained = cap.drainFatigue(RegenConfig.INN_DRAIN_RATE);
-                            if (drained > 0 && cap.getCurrentFatigue() == 0) {
+                            if (drained > 0 && cap.getCurrentFatigue() == 0 && cap.getFullyRestedMessageCooldown() == 0) {
                                 FeedbackHelper.sendFullyRested(player, dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.source.inn"));
+                                cap.setFullyRestedMessageCooldown(FULLY_RESTED_MSG_COOLDOWN_TICKS);
                             }
                         }
                     }

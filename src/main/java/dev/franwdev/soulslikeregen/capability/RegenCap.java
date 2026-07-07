@@ -25,6 +25,7 @@ public class RegenCap implements IRegenCap {
     private int   innWarmupTicks = 0;
     private boolean innDrainActive = false;
     private float lastKnownHealth = -1.0f;
+    private int   fullyRestedMessageCooldown = 0;
 
     public RegenCap() {
         // maxCap is set from config at construction time.
@@ -82,6 +83,9 @@ public class RegenCap implements IRegenCap {
 
     @Override public boolean isActionBarEnabled() { return actionBarEnabled; }
     @Override public void setActionBarEnabled(boolean enabled) { actionBarEnabled = enabled; }
+
+    @Override public int getFullyRestedMessageCooldown() { return fullyRestedMessageCooldown; }
+    @Override public void setFullyRestedMessageCooldown(int ticks) { fullyRestedMessageCooldown = Math.max(0, ticks); }
 
     // ── NBT Persistence ──────────────────────────────────────────────────────
 
