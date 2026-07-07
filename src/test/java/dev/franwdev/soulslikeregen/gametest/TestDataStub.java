@@ -1,6 +1,8 @@
 package dev.franwdev.soulslikeregen.gametest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -61,5 +63,12 @@ public class TestDataStub {
      */
     public static void removePlayer(UUID playerId) {
         playerTeams.remove(playerId);
+    }
+
+    /**
+     * Get all party team names.
+     */
+    public static Optional<List<String>> getAllPartyTeamNames() {
+        return Optional.of(new ArrayList<>(teamNames.values()));
     }
 }

@@ -1,14 +1,21 @@
 package dev.franwdev.soulslikeregen.compat;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.ModList;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FTBTeamsCompat {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String MOD_ID = "ftbteams";
     private static final boolean LOADED = ModList.get().isLoaded(MOD_ID);
     private static final boolean TEST_MODE = Boolean.getBoolean("soulslikeregen.testMode");
@@ -25,6 +32,30 @@ public class FTBTeamsCompat {
         Class<?> apiClass = Class.forName("dev.ftb.mods.ftbteams.api.FTBTeamsAPI");
         Method apiMethod = apiClass.getMethod("api");
         return apiMethod.invoke(null);
+    }
+
+    public static List<String> getAllPartyTeamNames() {
+        if (TEST_MODE) {
+            Optional<List<String>> testNames = invokeTestStringList("getAllPartyTeamNames");
+            return testNames.orElse(Collections.emptyList());
+        }
+        if (!LOADED) return Collections.emptyList();
+        List<String> names = new ArrayList<>();
+        try {
+            Object api = getApi();
+            if (api == null) return names;
+            Object manager = api.getClass().getMethod("getManager").invoke(api);
+            Collection<?> teams = (Collection<?>) manager.getClass().getMethod("getTeams").invoke(manager);
+            for (Object team : teams) {
+                boolean isParty = (boolean) team.getClass().getMethod("isPartyTeam").invoke(team);
+                if (!isParty) continue;
+                String shortName = (String) team.getClass().getMethod("getShortName").invoke(team);
+                names.add(shortName);
+            }
+        } catch (Throwable e) {
+            LOGGER.warn("Failed to get FTB Teams party names: {}", e.getMessage());
+        }
+        return names;
     }
 
     public static UUID getPlayerTeamId(ServerPlayer player) {
@@ -48,7 +79,7 @@ public class FTBTeamsCompat {
                 }
             }
         } catch (Throwable e) {
-            // Guard
+            LOGGER.warn("Failed to get FTB Teams player team ID: {}", e.getMessage());
         }
         return null;
     }
@@ -69,7 +100,7 @@ public class FTBTeamsCompat {
                 if (!isParty) continue;
                 
                 String shortName = (String) team.getClass().getMethod("getShortName").invoke(team);
-                net.minecraft.network.chat.Component displayName = (net.minecraft.network.chat.Component) team.getClass().getMethod("getName").invoke(team);
+                Component displayName = (Component) team.getClass().getMethod("getName").invoke(team);
                 String fullName = displayName.getString();
                 
                 if (shortName.equalsIgnoreCase(name) || fullName.equalsIgnoreCase(name)) {
@@ -78,7 +109,7 @@ public class FTBTeamsCompat {
                 }
             }
         } catch (Throwable e) {
-            // Guard
+            LOGGER.warn("Failed to get FTB Teams team ID by name: {}", e.getMessage());
         }
         return null;
     }
@@ -102,11 +133,11 @@ public class FTBTeamsCompat {
             Optional<?> teamOpt = (Optional<?>) getTeamByID.invoke(manager, teamId);
             if (teamOpt.isPresent()) {
                 Object team = teamOpt.get();
-                net.minecraft.network.chat.Component displayName = (net.minecraft.network.chat.Component) team.getClass().getMethod("getName").invoke(team);
+                Component displayName = (Component) team.getClass().getMethod("getName").invoke(team);
                 return displayName.getString();
             }
         } catch (Throwable e) {
-            // Guard
+            LOGGER.warn("Failed to get FTB Teams team name: {}", e.getMessage());
         }
         return "Unknown";
     }
@@ -123,7 +154,7 @@ public class FTBTeamsCompat {
             UUID teamId2 = getPlayerTeamId(player2);
             return teamId1 != null && teamId1.equals(teamId2);
         } catch (Throwable e) {
-            // Guard
+            LOGGER.warn("Failed to check if players are allies: {}", e.getMessage());
         }
         return false;
     }
@@ -151,6 +182,21 @@ public class FTBTeamsCompat {
             Object result = method.invoke(null, arg);
             if (result instanceof Optional<?>) {
                 return (Optional<String>) result;
+            }
+        } catch (Throwable e) {
+            // Guard
+        }
+        return Optional.empty();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Optional<List<String>> invokeTestStringList(String methodName) {
+        try {
+            Class<?> stubClass = Class.forName(TEST_STUB_CLASS);
+            Method method = stubClass.getMethod(methodName);
+            Object result = method.invoke(null);
+            if (result instanceof Optional<?>) {
+                return (Optional<List<String>>) result;
             }
         } catch (Throwable e) {
             // Guard

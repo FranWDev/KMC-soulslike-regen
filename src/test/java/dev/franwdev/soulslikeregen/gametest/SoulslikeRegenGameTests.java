@@ -1,11 +1,20 @@
 package dev.franwdev.soulslikeregen.gametest;
 
+import java.lang.reflect.Field;
+import java.util.List;
 import java.util.UUID;
 
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.suggestion.Suggestions;
+
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.level.GameRules;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
@@ -873,5 +882,112 @@ public class SoulslikeRegenGameTests {
             RegenConfig.BED_REDUCTION_PERCENT = oldReduction;
         }
         helper.succeed();
+    }
+
+    /**
+     * Test: Command auto-complete suggestions.
+     * Expectation: Sugestions list contains stubbed team names and the online player.
+     */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void testCommandSuggestions(GameTestHelper helper) {
+        TestDataStub.reset();
+        TestDataStub.setPlayerTeam(UUID.randomUUID(), UUID.randomUUID(), "TestTeamAlpha");
+        TestDataStub.setPlayerTeam(UUID.randomUUID(), UUID.randomUUID(), "TestTeamBeta");
+
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = TestHelpers.makePlayer(helper, playerId, "TestPlayerOne");
+
+        CommandDispatcher<CommandSourceStack> dispatcher = helper.getLevel().getServer().getCommands().getDispatcher();
+        CommandSourceStack source = player.createCommandSourceStack().withPermission(2);
+
+        // Add player to the server's player list so the playerName suggestions can find it
+        addPlayerToPlayerList(helper.getLevel().getServer().getPlayerList(), player);
+
+        try {
+            System.out.println("DEBUG: testMode system property = " + System.getProperty("soulslikeregen.testMode"));
+            System.out.println("DEBUG: FTBTeamsCompat.isLoaded() = " + dev.franwdev.soulslikeregen.compat.FTBTeamsCompat.isLoaded());
+            System.out.println("DEBUG: FTBTeamsCompat.getAllPartyTeamNames() = " + dev.franwdev.soulslikeregen.compat.FTBTeamsCompat.getAllPartyTeamNames());
+
+            // 1. Test teamName suggestion
+            ParseResults<CommandSourceStack> parseTeam = dispatcher.parse("soulslikeregen setTeamNexus 0 0 0 5 ", source);
+            try {
+                Suggestions suggestions = dispatcher.getCompletionSuggestions(parseTeam).get();
+                List<String> list = suggestions.getList().stream()
+                    .map(Suggestion::getText)
+                    .toList();
+                System.out.println("DEBUG: team suggestions = " + list + ", exceptions = " + parseTeam.getExceptions());
+                TestHelpers.assertTrue(helper, list.contains("TestTeamAlpha"), "Expected 'TestTeamAlpha' in suggestions, got: " + list);
+                TestHelpers.assertTrue(helper, list.contains("TestTeamBeta"), "Expected 'TestTeamBeta' in suggestions, got: " + list);
+            } catch (Exception e) {
+                helper.fail("Failed to get completion suggestions for teamName: " + e.getMessage());
+            }
+
+            // 2. Test playerName suggestion
+            ParseResults<CommandSourceStack> parsePlayer = dispatcher.parse("soulslikeregen player ", source);
+            try {
+                Suggestions suggestions = dispatcher.getCompletionSuggestions(parsePlayer).get();
+                List<String> list = suggestions.getList().stream()
+                    .map(Suggestion::getText)
+                    .toList();
+                System.out.println("DEBUG: player suggestions = " + list + ", exceptions = " + parsePlayer.getExceptions());
+                TestHelpers.assertTrue(helper, list.contains("TestPlayerOne"), "Expected 'TestPlayerOne' in player suggestions, got: " + list);
+            } catch (Exception e) {
+                helper.fail("Failed to get completion suggestions for playerName: " + e.getMessage());
+            }
+        } finally {
+            removePlayerFromPlayerList(helper.getLevel().getServer().getPlayerList(), player);
+        }
+
+        helper.succeed();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void addPlayerToPlayerList(PlayerList playerList, ServerPlayer player) {
+        try {
+            Class<?> clazz = playerList.getClass();
+            while (clazz != null && clazz != Object.class) {
+                for (Field field : clazz.getDeclaredFields()) {
+                    if (List.class.isAssignableFrom(field.getType())) {
+                        field.setAccessible(true);
+                        Object listObj = field.get(playerList);
+                        if (listObj instanceof List) {
+                            List<Object> list = (List<Object>) listObj;
+                            if (!list.getClass().getName().contains("Unmodifiable")) {
+                                list.add(player);
+                                return;
+                            }
+                        }
+                    }
+                }
+                clazz = clazz.getSuperclass();
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void removePlayerFromPlayerList(PlayerList playerList, ServerPlayer player) {
+        try {
+            Class<?> clazz = playerList.getClass();
+            while (clazz != null && clazz != Object.class) {
+                for (Field field : clazz.getDeclaredFields()) {
+                    if (List.class.isAssignableFrom(field.getType())) {
+                        field.setAccessible(true);
+                        Object listObj = field.get(playerList);
+                        if (listObj instanceof List) {
+                            List<Object> list = (List<Object>) listObj;
+                            if (!list.getClass().getName().contains("Unmodifiable")) {
+                                list.remove(player);
+                                return;
+                            }
+                        }
+                    }
+                }
+                clazz = clazz.getSuperclass();
+            }
+        } catch (Exception e) {
+            // ignore
+        }
     }
 }

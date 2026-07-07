@@ -69,6 +69,11 @@ public class SoulslikeRegenCommand {
                 .then(argument("coords", getVec3Argument())
                     .then(argument("radius", DoubleArgumentType.doubleArg(0.1))
                         .then(argument("teamName", StringArgumentType.string())
+                            .suggests((ctx, builder) -> {
+                                FTBTeamsCompat.getAllPartyTeamNames()
+                                    .forEach(builder::suggest);
+                                return builder.buildFuture();
+                            })
                             .executes(ctx -> executeSetNexus(
                                 ctx.getSource(),
                                 getVec3Coord(ctx, "coords"),
@@ -168,6 +173,11 @@ public class SoulslikeRegenCommand {
             .then(literal("player")
                 .requires(src -> src.hasPermission(2))
                 .then(argument("playerName", StringArgumentType.string())
+                    .suggests((ctx, builder) -> {
+                        ctx.getSource().getServer().getPlayerList().getPlayers()
+                            .forEach(p -> builder.suggest(p.getName().getString()));
+                        return builder.buildFuture();
+                    })
                     // Player Fatigue Commands
                     .then(literal("fatigue")
                         .then(literal("get")
