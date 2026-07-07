@@ -48,8 +48,8 @@ public class RegenConfig {
     /** Ticks between campfire rest uses (default 24000 = 1 in-game day). */
     public static int CAMPFIRE_COOLDOWN_TICKS = 24000;
 
-    /** Bed rest fatigue reduction per sleep. */
-    public static float BED_REDUCTION = 20.0f;
+    /** Bed rest fatigue reduction percentage per sleep (1.0 = 100%). */
+    public static float BED_REDUCTION_PERCENT = 1.0f;
 
     /** Ticks between bed rest uses (default 24000 = 1 in-game day). */
     public static int BED_COOLDOWN_TICKS = 24000;
@@ -74,7 +74,7 @@ public class RegenConfig {
     private static final ForgeConfigSpec.IntValue    CFG_CAMPFIRE_REQUIRED_TICKS;
     private static final ForgeConfigSpec.DoubleValue CFG_CAMPFIRE_REDUCTION;
     private static final ForgeConfigSpec.IntValue    CFG_CAMPFIRE_COOLDOWN_TICKS;
-    private static final ForgeConfigSpec.DoubleValue CFG_BED_REDUCTION;
+    private static final ForgeConfigSpec.DoubleValue CFG_BED_REDUCTION_PERCENT;
     private static final ForgeConfigSpec.IntValue    CFG_BED_COOLDOWN_TICKS;
     private static final ForgeConfigSpec.DoubleValue CFG_DAY_BONUS_REDUCTION;
     private static final ForgeConfigSpec.IntValue    CFG_LEVEL_COUNT;
@@ -142,9 +142,9 @@ public class RegenConfig {
             .comment("Ticks between campfire rest uses (24000 = 1 in-game day, 12000 = half day).")
             .defineInRange("campfire_cooldown_ticks", 24000, 20, 2_000_000);
 
-        CFG_BED_REDUCTION = b
-            .comment("Fatigue units removed by sleeping in a bed.")
-            .defineInRange("bed_reduction", 20.0, 0.0, 10000.0);
+        CFG_BED_REDUCTION_PERCENT = b
+            .comment("Percentage of fatigue reduction when sleeping in a bed (1.0 = 100%).")
+            .defineInRange("bed_reduction_percent", 1.0, 0.0, 1.0);
 
         CFG_BED_COOLDOWN_TICKS = b
             .comment("Ticks between bed rest uses (24000 = 1 in-game day).")
@@ -209,7 +209,7 @@ public class RegenConfig {
         CAMPFIRE_REQUIRED_TICKS     = CFG_CAMPFIRE_REQUIRED_TICKS.get();
         CAMPFIRE_REDUCTION          = (float) CFG_CAMPFIRE_REDUCTION.get().doubleValue();
         CAMPFIRE_COOLDOWN_TICKS     = CFG_CAMPFIRE_COOLDOWN_TICKS.get();
-        BED_REDUCTION               = (float) CFG_BED_REDUCTION.get().doubleValue();
+        BED_REDUCTION_PERCENT       = (float) CFG_BED_REDUCTION_PERCENT.get().doubleValue();
         BED_COOLDOWN_TICKS          = CFG_BED_COOLDOWN_TICKS.get();
         DAY_BONUS_REDUCTION         = (float) CFG_DAY_BONUS_REDUCTION.get().doubleValue();
 

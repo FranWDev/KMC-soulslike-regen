@@ -51,9 +51,9 @@ public class ServerEventHandler {
                     long currentDay = Math.max(0L, level.getDayTime()) / 24000L;
                     long lastBedDay = cap.getLastBedUseTick() < 0 ? -1L : Math.max(0L, cap.getLastBedUseTick()) / 24000L;
 
-                    // Bed Rest (50% reduction of current fatigue)
+                    // Bed Rest (percentage reduction of current fatigue)
                     if (cap.getLastBedUseTick() < 0 || currentDay > lastBedDay) {
-                        float drained = cap.getCurrentFatigue() * 0.5f;
+                        float drained = cap.getCurrentFatigue() * RegenConfig.BED_REDUCTION_PERCENT;
                         cap.drainFatigue(drained);
                         cap.setLastBedUseTick(level.getDayTime());
                         FeedbackHelper.sendBedRest(player, drained);

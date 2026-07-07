@@ -789,13 +789,20 @@ public class SoulslikeRegenGameTests {
             }
         }
  
-        // Fire PlayerWakeUpEvent with wakeImmediately = false, updateLevel = true
-        MinecraftForge.EVENT_BUS.post(
-            new PlayerWakeUpEvent(player, false, true)
-        );
- 
-        TestHelpers.assertEquals(helper, 15.0f, cap.getCurrentFatigue(), 0.01f,
-            "Fatigue should be reduced by 50% by bed sleep");
+        // Set bed reduction percent for test and restore it afterwards
+        float oldReduction = RegenConfig.BED_REDUCTION_PERCENT;
+        try {
+            RegenConfig.BED_REDUCTION_PERCENT = 0.5f;
+            // Fire PlayerWakeUpEvent with wakeImmediately = false, updateLevel = true
+            MinecraftForge.EVENT_BUS.post(
+                new PlayerWakeUpEvent(player, false, true)
+            );
+     
+            TestHelpers.assertEquals(helper, 15.0f, cap.getCurrentFatigue(), 0.01f,
+                "Fatigue should be reduced by 50% by bed sleep");
+        } finally {
+            RegenConfig.BED_REDUCTION_PERCENT = oldReduction;
+        }
         helper.succeed();
     }
  
@@ -850,14 +857,21 @@ public class SoulslikeRegenGameTests {
         player.level().setBlock(campfirePos, Blocks.CAMPFIRE.defaultBlockState()
             .setValue(CampfireBlock.LIT, true), 3);
  
-        // Fire PlayerWakeUpEvent
-        MinecraftForge.EVENT_BUS.post(
-            new PlayerWakeUpEvent(player, false, true)
-        );
- 
-        // Should ONLY have reduced 50% from bed rest, campfire rest should NOT be applied on wake up
-        TestHelpers.assertEquals(helper, 20.0f, cap.getCurrentFatigue(), 0.01f,
-            "Fatigue should only be reduced by bed sleep, campfire rest should not stack instantly on wake up");
+        // Set bed reduction percent for test and restore it afterwards
+        float oldReduction = RegenConfig.BED_REDUCTION_PERCENT;
+        try {
+            RegenConfig.BED_REDUCTION_PERCENT = 0.5f;
+            // Fire PlayerWakeUpEvent
+            MinecraftForge.EVENT_BUS.post(
+                new PlayerWakeUpEvent(player, false, true)
+            );
+     
+            // Should ONLY have reduced 50% from bed rest, campfire rest should NOT be applied on wake up
+            TestHelpers.assertEquals(helper, 20.0f, cap.getCurrentFatigue(), 0.01f,
+                "Fatigue should only be reduced by bed sleep, campfire rest should not stack instantly on wake up");
+        } finally {
+            RegenConfig.BED_REDUCTION_PERCENT = oldReduction;
+        }
         helper.succeed();
     }
 }
