@@ -18,6 +18,9 @@ import dev.franwdev.soulslikeregen.capability.IRegenCap;
 import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
 import dev.franwdev.soulslikeregen.compat.FTBTeamsCompat;
 import dev.franwdev.soulslikeregen.config.RegenConfig;
+import dev.franwdev.soulslikeregen.client.FatigueClientData.RecoveryType;
+import dev.franwdev.soulslikeregen.network.FatigueDataPacket;
+import dev.franwdev.soulslikeregen.network.SoulslikeRegenNetwork;
 import dev.franwdev.soulslikeregen.data.InnData;
 import dev.franwdev.soulslikeregen.data.InnEntry;
 import dev.franwdev.soulslikeregen.data.NexusData;
@@ -209,17 +212,31 @@ public class PlayerTickHandler {
                     cap.setLastDamageTick(level.getGameTime());
                 }
 
-                // 7. Action Bar: Send persistent bar if admin enabled it, or subtle updates when exhausted
+                // 7. Action Bar & Client HUD Sync: Send updates when fatigue values change or periodically
+                if (player.tickCount % 10 == 0) {
+                    RecoveryType recoveryType = RecoveryType.NONE;
+                    if (cap.isNexoDrainActive()) {
+                        recoveryType = RecoveryType.NEXUS;
+                    } else if (cap.isInnDrainActive() || cap.getCampfireTicks() > 0) {
+                        recoveryType = RecoveryType.REST;
+                    }
+
+                    SoulslikeRegenNetwork.sendToClient(
+                        player,
+                        new FatigueDataPacket(
+                            cap.getCurrentFatigue(),
+                            cap.getMaxCap(),
+                            cap.isExhausted(),
+                            recoveryType
+                        )
+                    );
+                }
+
                 if (cap.isActionBarEnabled()) {
                     // Persistent bar: send every 10 ticks (2 Hz) to keep it visible
                     if (player.tickCount % 10 == 0) {
                         Component bar = FeedbackHelper.buildStatusBar(player, cap);
                         FeedbackHelper.sendActionBar(player, bar);
-                    }
-                } else {
-                    // Default: subtle updates only when exhausted, every 5 seconds
-                    if (cap.isExhausted() && player.tickCount % 100 == 0) {
-                        FeedbackHelper.sendStatusActionBar(player, cap);
                     }
                 }
             });

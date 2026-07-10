@@ -65,7 +65,7 @@ public class SoulslikeRegenCommand {
             
             // --- Nexus Commands (Admin: Permission level 2) ---
             .then(literal("setTeamNexus")
-                .requires(src -> src.hasPermission(2))
+                .requires(src -> hasPermission(src, 2))
                 .then(argument("coords", getVec3Argument())
                     .then(argument("radius", DoubleArgumentType.doubleArg(0.1))
                         .then(argument("teamName", StringArgumentType.string())
@@ -85,7 +85,7 @@ public class SoulslikeRegenCommand {
                 )
             )
             .then(literal("editTeamNexus")
-                .requires(src -> src.hasPermission(2))
+                .requires(src -> hasPermission(src, 2))
                 .then(argument("teamName", StringArgumentType.string())
                     .suggests((ctx, builder) -> {
                         try {
@@ -116,7 +116,7 @@ public class SoulslikeRegenCommand {
                 )
             )
             .then(literal("removeTeamNexus")
-                .requires(src -> src.hasPermission(2))
+                .requires(src -> hasPermission(src, 2))
                 .then(argument("teamName", StringArgumentType.string())
                     .suggests((ctx, builder) -> {
                         try {
@@ -141,7 +141,7 @@ public class SoulslikeRegenCommand {
 
             // --- Inn Commands (Admin: Permission level 2) ---
             .then(literal("setInn")
-                .requires(src -> src.hasPermission(2))
+                .requires(src -> hasPermission(src, 2))
                 .then(argument("coords", getVec3Argument())
                     .then(argument("radius", DoubleArgumentType.doubleArg(0.1))
                         .then(argument("name", StringArgumentType.word())
@@ -156,7 +156,7 @@ public class SoulslikeRegenCommand {
                 )
             )
             .then(literal("editInn")
-                .requires(src -> src.hasPermission(2))
+                .requires(src -> hasPermission(src, 2))
                 .then(argument("name", StringArgumentType.word())
                     .suggests((ctx, builder) -> {
                         try {
@@ -187,7 +187,7 @@ public class SoulslikeRegenCommand {
                 )
             )
             .then(literal("removeInn")
-                .requires(src -> src.hasPermission(2))
+                .requires(src -> hasPermission(src, 2))
                 .then(argument("name", StringArgumentType.word())
                     .suggests((ctx, builder) -> {
                         try {
@@ -212,7 +212,7 @@ public class SoulslikeRegenCommand {
             
             // --- Player Stat Commands (Admin: Permission level 2) ---
             .then(literal("player")
-                .requires(src -> src.hasPermission(2))
+                .requires(src -> hasPermission(src, 2))
                 .then(argument("playerName", StringArgumentType.string())
                     .suggests((ctx, builder) -> {
                         ctx.getSource().getServer().getPlayerList().getPlayers()
@@ -943,5 +943,29 @@ public class SoulslikeRegenCommand {
         } catch (Exception e) {
             throw new RuntimeException("Failed to get Vec3 via signature reflection", e);
         }
+    }
+
+    private static boolean hasPermission(CommandSourceStack src, int level) {
+        try {
+            Class<?> clazz = CommandSourceStack.class;
+            // 1. Try to find the method by name "hasPermission" or "m_6761_"
+            for (String methodName : new String[]{"hasPermission", "m_6761_"}) {
+                try {
+                    Method method = clazz.getMethod(methodName, int.class);
+                    method.setAccessible(true);
+                    return (boolean) method.invoke(src, level);
+                } catch (NoSuchMethodException ignored) {}
+            }
+            // 2. Fallback to signature search: returns boolean, takes single int parameter
+            for (Method method : clazz.getMethods()) {
+                if (method.getParameterCount() == 1 &&
+                    method.getParameterTypes()[0] == int.class &&
+                    method.getReturnType() == boolean.class) {
+                    method.setAccessible(true);
+                    return (boolean) method.invoke(src, level);
+                }
+            }
+        } catch (Exception ignored) {}
+        return level <= 0;
     }
 }

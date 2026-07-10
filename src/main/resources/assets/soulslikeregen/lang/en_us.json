@@ -49,5 +49,6 @@
   "msg.soulslikeregen.command.inn.list_item": "'%s': Coordinates [%s, %s, %s] (Radius: %s) in %s",
   
   "msg.soulslikeregen.command.no_permission": "You do not have permission to execute this command.",
-  "msg.soulslikeregen.command.only_player": "Only players can execute this subcommand."
+  "msg.soulslikeregen.command.only_player": "Only players can execute this subcommand.",
+  "msg.soulslikeregen.hud.exhausted": "FATIGUED"
 }

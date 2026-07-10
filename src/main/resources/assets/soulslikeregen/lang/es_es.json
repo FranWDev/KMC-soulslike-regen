@@ -49,5 +49,6 @@
   "msg.soulslikeregen.command.inn.list_item": "'%s': Coordenadas [%s, %s, %s] (Radio: %s) en %s",
   
   "msg.soulslikeregen.command.no_permission": "No tienes permiso para ejecutar este comando.",
-  "msg.soulslikeregen.command.only_player": "Solo los jugadores pueden ejecutar este subcomando."
+  "msg.soulslikeregen.command.only_player": "Solo los jugadores pueden ejecutar este subcomando.",
+  "msg.soulslikeregen.hud.exhausted": "FATIGADO"
 }
