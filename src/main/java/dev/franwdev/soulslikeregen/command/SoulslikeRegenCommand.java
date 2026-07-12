@@ -28,7 +28,11 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 
 import dev.franwdev.soulslikeregen.api.event.FatigueResetEvent;
+import dev.franwdev.soulslikeregen.capability.IRegenCap;
 import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
+import dev.franwdev.soulslikeregen.client.FatigueClientData.RecoveryType;
+import dev.franwdev.soulslikeregen.network.FatigueDataPacket;
+import dev.franwdev.soulslikeregen.network.SoulslikeRegenNetwork;
 import dev.franwdev.soulslikeregen.compat.FTBTeamsCompat;
 import dev.franwdev.soulslikeregen.config.RegenConfig;
 import dev.franwdev.soulslikeregen.data.InnData;
@@ -624,6 +628,24 @@ public class SoulslikeRegenCommand {
         return 1;
     }
 
+    private static void syncToClient(ServerPlayer player, IRegenCap cap) {
+        RecoveryType recoveryType = RecoveryType.NONE;
+        if (cap.isNexoDrainActive()) {
+            recoveryType = RecoveryType.NEXUS;
+        } else if (cap.isInnDrainActive() || cap.getCampfireTicks() > 0) {
+            recoveryType = RecoveryType.REST;
+        }
+        SoulslikeRegenNetwork.sendToClient(
+            player,
+            new FatigueDataPacket(
+                cap.getCurrentFatigue(),
+                cap.getMaxCap(),
+                cap.isExhausted(),
+                recoveryType
+            )
+        );
+    }
+
     private static int executePlayerFatigueSet(CommandSourceStack src, String playerName, float amount) {
         ServerPlayer player = findPlayer(src, playerName);
         if (player == null) return 0;
@@ -632,6 +654,7 @@ public class SoulslikeRegenCommand {
             float maxCap = cap.getMaxCap();
             float clamped = Math.max(0, Math.min(amount, maxCap));
             cap.setCurrentFatigue(clamped);
+            syncToClient(player, cap);
             src.sendSuccess(() -> Component.literal(String.format(
                 "[SLRegen] Set %s's fatigue to %.1f / %.1f", playerName, clamped, maxCap
             )), false);
@@ -648,6 +671,7 @@ public class SoulslikeRegenCommand {
             float maxCap = cap.getMaxCap();
             float added = cap.addFatigue(amount);
             float after = cap.getCurrentFatigue();
+            syncToClient(player, cap);
             src.sendSuccess(() -> Component.literal(String.format(
                 "[SLRegen] Added %.1f fatigue to %s (%.1f → %.1f / %.1f)", added, playerName, before, after, maxCap
             )), false);
@@ -663,6 +687,7 @@ public class SoulslikeRegenCommand {
             float before = cap.getCurrentFatigue();
             float drained = cap.drainFatigue(amount);
             float after = cap.getCurrentFatigue();
+            syncToClient(player, cap);
             src.sendSuccess(() -> Component.literal(String.format(
                 "[SLRegen] Drained %.1f fatigue from %s (%.1f → %.1f)", drained, playerName, before, after
             )), false);
@@ -690,6 +715,7 @@ public class SoulslikeRegenCommand {
         RegenCapProvider.get(player).ifPresent(cap -> {
             float before = cap.getMaxCap();
             cap.setMaxCap(amount);
+            syncToClient(player, cap);
             src.sendSuccess(() -> Component.literal(String.format(
                 "[SLRegen] Set %s's max capacity from %.1f to %.1f", playerName, before, amount
             )), false);
@@ -704,6 +730,7 @@ public class SoulslikeRegenCommand {
         RegenCapProvider.get(player).ifPresent(cap -> {
             float before = cap.getMaxCap();
             cap.setMaxCap(RegenConfig.BASE_MAX_CAP);
+            syncToClient(player, cap);
             src.sendSuccess(() -> Component.literal(String.format(
                 "[SLRegen] Reset %s's max capacity from %.1f to BASE (%.1f)", playerName, before, RegenConfig.BASE_MAX_CAP
             )), false);
@@ -730,9 +757,26 @@ public class SoulslikeRegenCommand {
 
         RegenCapProvider.get(player).ifPresent(cap -> {
             int before = cap.getCurrentLevel();
-            cap.setCurrentLevel(Math.max(0, level));
+            int targetLevel = Math.max(0, Math.min(level, RegenConfig.LEVELS.size()));
+            cap.setCurrentLevel(targetLevel);
+            
+            float newMaxCap = RegenConfig.BASE_MAX_CAP;
+            for (int i = 0; i < targetLevel; i++) {
+                newMaxCap += RegenConfig.LEVELS.get(i).capacityIncrease();
+            }
+            cap.setMaxCap(newMaxCap);
+            
+            float newTotalFatigue = 0.0f;
+            if (targetLevel > 0) {
+                newTotalFatigue = RegenConfig.LEVELS.get(targetLevel - 1).fatigueThreshold();
+            }
+            cap.setTotalFatigueSpent(newTotalFatigue);
+            
+            final float finalMaxCap = newMaxCap;
+            final float finalTotalFatigue = newTotalFatigue;
+            syncToClient(player, cap);
             src.sendSuccess(() -> Component.literal(String.format(
-                "[SLRegen] Set %s's level from %d to %d (max capacity: %.1f)", playerName, before, level, cap.getMaxCap()
+                "[SLRegen] Set %s's level from %d to %d (max capacity: %.1f, total fatigue: %.1f)", playerName, before, targetLevel, finalMaxCap, finalTotalFatigue
             )), false);
         });
         return 1;
@@ -744,10 +788,26 @@ public class SoulslikeRegenCommand {
 
         RegenCapProvider.get(player).ifPresent(cap -> {
             int before = cap.getCurrentLevel();
-            int after = before + Math.max(1, amount);
-            cap.setCurrentLevel(after);
+            int targetLevel = Math.max(0, Math.min(before + Math.max(1, amount), RegenConfig.LEVELS.size()));
+            cap.setCurrentLevel(targetLevel);
+            
+            float newMaxCap = RegenConfig.BASE_MAX_CAP;
+            for (int i = 0; i < targetLevel; i++) {
+                newMaxCap += RegenConfig.LEVELS.get(i).capacityIncrease();
+            }
+            cap.setMaxCap(newMaxCap);
+            
+            float newTotalFatigue = 0.0f;
+            if (targetLevel > 0) {
+                newTotalFatigue = RegenConfig.LEVELS.get(targetLevel - 1).fatigueThreshold();
+            }
+            cap.setTotalFatigueSpent(newTotalFatigue);
+            
+            final float finalMaxCap = newMaxCap;
+            final float finalTotalFatigue = newTotalFatigue;
+            syncToClient(player, cap);
             src.sendSuccess(() -> Component.literal(String.format(
-                "[SLRegen] Leveled up %s from level %d to %d (max capacity: %.1f)", playerName, before, after, cap.getMaxCap()
+                "[SLRegen] Leveled up %s from level %d to %d (max capacity: %.1f, total fatigue: %.1f)", playerName, before, targetLevel, finalMaxCap, finalTotalFatigue
             )), false);
         });
         return 1;
@@ -760,8 +820,12 @@ public class SoulslikeRegenCommand {
         RegenCapProvider.get(player).ifPresent(cap -> {
             int before = cap.getCurrentLevel();
             cap.setCurrentLevel(0);
+            cap.setMaxCap(RegenConfig.BASE_MAX_CAP);
+            cap.setTotalFatigueSpent(0.0f);
+            
+            syncToClient(player, cap);
             src.sendSuccess(() -> Component.literal(String.format(
-                "[SLRegen] Reset %s's level from %d to 0", playerName, before
+                "[SLRegen] Reset %s's level from %d to 0 (max capacity: %.1f, total fatigue: 0.0)", playerName, before, RegenConfig.BASE_MAX_CAP
             )), false);
         });
         return 1;
@@ -840,6 +904,8 @@ public class SoulslikeRegenCommand {
             cap.setCurrentFatigue(0.0f);
             cap.setMaxCap(RegenConfig.BASE_MAX_CAP);
             cap.setCurrentLevel(0);
+            cap.setTotalFatigueSpent(0.0f);
+            syncToClient(player, cap);
             src.sendSuccess(() -> Component.literal(String.format(
                 "[SLRegen] HARD RESET %s: fatigue=0, capacity=BASE (%.1f), level=0", 
                 playerName, RegenConfig.BASE_MAX_CAP

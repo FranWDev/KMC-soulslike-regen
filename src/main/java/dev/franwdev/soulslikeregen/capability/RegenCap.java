@@ -43,6 +43,7 @@ public class RegenCap implements IRegenCap {
 
     @Override public float getTotalFatigueSpent() { return totalFatigueSpent; }
     @Override public void addFatigueSpent(float amount) { totalFatigueSpent += amount; }
+    @Override public void setTotalFatigueSpent(float v) { totalFatigueSpent = Math.max(0, v); }
 
     @Override public int getCurrentLevel() { return currentLevel; }
     @Override public void setCurrentLevel(int level) { currentLevel = level; }

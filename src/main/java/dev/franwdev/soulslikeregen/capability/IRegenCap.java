@@ -12,6 +12,7 @@ public interface IRegenCap {
 
     float getTotalFatigueSpent();
     void addFatigueSpent(float amount);
+    void setTotalFatigueSpent(float value);
 
     int getCurrentLevel();
     void setCurrentLevel(int level);
