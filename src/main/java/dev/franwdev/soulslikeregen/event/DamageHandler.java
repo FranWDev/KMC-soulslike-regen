@@ -2,7 +2,7 @@ package dev.franwdev.soulslikeregen.event;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -13,11 +13,17 @@ import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
 public class DamageHandler {
 
     @SubscribeEvent
-    public static void onPlayerHurt(LivingHurtEvent event) {
+    public static void onPlayerDamaged(LivingDamageEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             RegenCapProvider.get(player).ifPresent(cap -> {
                 cap.setLastDamageTick(player.level().getGameTime());
+
+                // Increment buffer with net damage if it classified as environmental
+                if (DamageClassifier.isEnvironmental(event.getSource())) {
+                    cap.addEnvironmentalDamage(event.getAmount());
+                }
             });
         }
     }
 }
+

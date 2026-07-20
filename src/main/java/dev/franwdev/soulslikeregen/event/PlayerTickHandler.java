@@ -79,7 +79,7 @@ public class PlayerTickHandler {
                         discount = Math.min(nearbyAllies * RegenConfig.ALLY_DISCOUNT_PER_PLAYER, RegenConfig.ALLY_DISCOUNT_MAX);
                     }
 
-                    float fatigueToAdd = healed * (1.0f - discount);
+                    float fatigueToAdd = applyEnvironmentalDiscount(cap, healed, discount);
                     cap.addFatigue(fatigueToAdd);
 
                     // Level up check
@@ -231,15 +231,25 @@ public class PlayerTickHandler {
                         )
                     );
                 }
-
-                if (cap.isActionBarEnabled()) {
-                    // Persistent bar: send every 10 ticks (2 Hz) to keep it visible
-                    if (player.tickCount % 10 == 0) {
-                        Component bar = FeedbackHelper.buildStatusBar(player, cap);
-                        FeedbackHelper.sendActionBar(player, bar);
-                    }
-                }
             });
         }
     }
+
+    private static float applyEnvironmentalDiscount(IRegenCap cap, float healed, float allyDiscount) {
+        float buffer = cap.getEnvironmentalDamageBuffer();
+
+        // Portion of this heal that was recovering environmental damage
+        float envHealed    = Math.min(healed, buffer);
+        float normalHealed = healed - envHealed;
+
+        // Drain the buffer by the amount covered
+        cap.setEnvironmentalDamageBuffer(buffer - envHealed);
+
+        float envFatigue    = envHealed    * RegenConfig.ENVIRONMENTAL_FATIGUE_MULTIPLIER;
+        float normalFatigue = normalHealed;
+
+        return (envFatigue + normalFatigue) * (1.0f - allyDiscount);
+    }
 }
+
+

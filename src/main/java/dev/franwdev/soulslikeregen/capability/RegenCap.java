@@ -26,6 +26,7 @@ public class RegenCap implements IRegenCap {
     private boolean innDrainActive = false;
     private float lastKnownHealth = -1.0f;
     private int   fullyRestedMessageCooldown = 0;
+    private float environmentalDamageBuffer = 0.0f;
 
     public RegenCap() {
         // maxCap is set from config at construction time.
@@ -87,6 +88,9 @@ public class RegenCap implements IRegenCap {
 
     @Override public int getFullyRestedMessageCooldown() { return fullyRestedMessageCooldown; }
     @Override public void setFullyRestedMessageCooldown(int ticks) { fullyRestedMessageCooldown = Math.max(0, ticks); }
+
+    @Override public float getEnvironmentalDamageBuffer() { return environmentalDamageBuffer; }
+    @Override public void setEnvironmentalDamageBuffer(float v) { environmentalDamageBuffer = Math.max(0, v); }
 
     // ── NBT Persistence ──────────────────────────────────────────────────────
 

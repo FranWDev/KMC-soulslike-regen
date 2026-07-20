@@ -57,6 +57,9 @@ public class RegenConfig {
     /** Day survival bonus (24000 ticks without damage). */
     public static float DAY_BONUS_REDUCTION = 40.0f;
 
+    /** Fatigue cost multiplier when healing environmental damage (0.25 = 25%). */
+    public static float ENVIRONMENTAL_FATIGUE_MULTIPLIER = 0.25f;
+
     /** Ordered list of level definitions (populated in bake()). */
     public static List<LevelDefinition> LEVELS = new ArrayList<>();
 
@@ -77,6 +80,7 @@ public class RegenConfig {
     private static final ForgeConfigSpec.DoubleValue CFG_BED_REDUCTION_PERCENT;
     private static final ForgeConfigSpec.IntValue    CFG_BED_COOLDOWN_TICKS;
     private static final ForgeConfigSpec.DoubleValue CFG_DAY_BONUS_REDUCTION;
+    private static final ForgeConfigSpec.DoubleValue CFG_ENVIRONMENTAL_FATIGUE_MULTIPLIER;
     private static final ForgeConfigSpec.IntValue    CFG_LEVEL_COUNT;
 
     // Level entries: indexed by level number (1-based)
@@ -154,6 +158,10 @@ public class RegenConfig {
             .comment("Fatigue units removed after surviving 24000 ticks without damage.")
             .defineInRange("day_bonus_reduction", 40.0, 0.0, 10000.0);
 
+        CFG_ENVIRONMENTAL_FATIGUE_MULTIPLIER = b
+            .comment("Fatigue cost multiplier for healing environmental damage (0.0 = free, 1.0 = same as combat).")
+            .defineInRange("environmental_fatigue_multiplier", 0.25, 0.0, 1.0);
+
         b.pop();
 
         // ── Level System ────────────────────────────────────────────────────
@@ -212,15 +220,16 @@ public class RegenConfig {
         BED_REDUCTION_PERCENT       = (float) CFG_BED_REDUCTION_PERCENT.get().doubleValue();
         BED_COOLDOWN_TICKS          = CFG_BED_COOLDOWN_TICKS.get();
         DAY_BONUS_REDUCTION         = (float) CFG_DAY_BONUS_REDUCTION.get().doubleValue();
+        ENVIRONMENTAL_FATIGUE_MULTIPLIER = (float) CFG_ENVIRONMENTAL_FATIGUE_MULTIPLIER.get().doubleValue();
 
         int count = CFG_LEVEL_COUNT.get();
-        LEVELS = new ArrayList<>(count);
+        List<LevelDefinition> tempLevels = new ArrayList<>(count);
         for (int i = 0; i < count && i < CFG_LEVEL_CAPACITY_INCREASE.size(); i++) {
             float increase  = (float) CFG_LEVEL_CAPACITY_INCREASE.get(i).get().doubleValue();
             float threshold = (float) CFG_LEVEL_FATIGUE_THRESHOLD.get(i).get().doubleValue();
-            LEVELS.add(new LevelDefinition(i + 1, increase, threshold));
+            tempLevels.add(new LevelDefinition(i + 1, increase, threshold));
         }
-        LEVELS = Collections.unmodifiableList(LEVELS);
+        LEVELS = Collections.unmodifiableList(tempLevels);
     }
 
     /** Immutable snapshot of one level's definition. */

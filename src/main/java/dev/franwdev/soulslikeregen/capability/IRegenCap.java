@@ -79,4 +79,12 @@ public interface IRegenCap {
         setCurrentFatigue(before - drained);
         return drained;
     }
+
+    float getEnvironmentalDamageBuffer();
+    void setEnvironmentalDamageBuffer(float value);
+
+    /** Adds net damage from an environmental source to the buffer. */
+    default void addEnvironmentalDamage(float amount) {
+        setEnvironmentalDamageBuffer(getEnvironmentalDamageBuffer() + amount);
+    }
 }
