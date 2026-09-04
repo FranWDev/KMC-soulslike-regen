@@ -11,7 +11,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class HudPositionScreen extends Screen {
 
-    private static final ResourceLocation EYE_TEXTURE = new ResourceLocation(SoulslikeRegen.MODID, "textures/hud/eye_0.png");
+    private static final ResourceLocation EYE_TEXTURE = ResourceLocation.fromNamespaceAndPath(SoulslikeRegen.MODID, "textures/hud/eye_0.png");
 
     private boolean dragging = false;
     private double dragStartX = 0;
@@ -31,7 +31,7 @@ public class HudPositionScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         // Draw dark background overlay
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
 
         int screenWidth = this.width;
         int screenHeight = this.height;

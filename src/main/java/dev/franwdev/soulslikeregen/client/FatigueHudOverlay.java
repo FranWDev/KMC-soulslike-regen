@@ -2,12 +2,13 @@ package dev.franwdev.soulslikeregen.client;
 
 import dev.franwdev.soulslikeregen.SoulslikeRegen;
 import dev.franwdev.soulslikeregen.config.SoulslikeRegenClientConfig;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,11 +22,13 @@ public class FatigueHudOverlay {
 
     static {
         for (int i = 0; i < EYE_FRAME_COUNT; i++) {
-            EYE_FRAMES[i] = new ResourceLocation(SoulslikeRegen.MODID, "textures/hud/eye_" + i + ".png");
+            EYE_FRAMES[i] = ResourceLocation.fromNamespaceAndPath(SoulslikeRegen.MODID, "textures/hud/eye_" + i + ".png");
         }
     }
 
-    public static final IGuiOverlay HUD = (gui, guiGraphics, partialTick, screenWidth, screenHeight) -> {
+    public static final LayeredDraw.Layer HUD = (GuiGraphics guiGraphics, DeltaTracker deltaTracker) -> {
+        int screenWidth = guiGraphics.guiWidth();
+        int screenHeight = guiGraphics.guiHeight();
         Minecraft mc = Minecraft.getInstance();
         if (mc.options.hideGui || mc.player == null) {
             return;

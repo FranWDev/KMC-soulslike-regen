@@ -1,16 +1,22 @@
 package dev.franwdev.soulslikeregen.client;
 
 import dev.franwdev.soulslikeregen.SoulslikeRegen;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
-@Mod.EventBusSubscriber(modid = SoulslikeRegen.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = SoulslikeRegen.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientEventHandler {
 
     @SubscribeEvent
-    public static void onRegisterOverlays(RegisterGuiOverlaysEvent event) {
-        event.registerAboveAll("fatigue", FatigueHudOverlay.HUD);
+    public static void onRegisterLayers(RegisterGuiLayersEvent event) {
+        event.registerAbove(
+            VanillaGuiLayers.ARMOR_LEVEL,
+            ResourceLocation.fromNamespaceAndPath(SoulslikeRegen.MODID, "fatigue_hud"),
+            FatigueHudOverlay.HUD
+        );
     }
 }
