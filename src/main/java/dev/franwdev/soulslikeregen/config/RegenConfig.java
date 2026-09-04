@@ -1,14 +1,14 @@
 package dev.franwdev.soulslikeregen.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.neoforged.neoforge.common.ModConfigSpec;
+
 public class RegenConfig {
 
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec SPEC;
 
     // ── Baked static fields (read once, used in hot paths) ──────────────────
 
@@ -65,27 +65,27 @@ public class RegenConfig {
 
     // ── Config spec entries ──────────────────────────────────────────────────
 
-    private static final ForgeConfigSpec.DoubleValue CFG_BASE_MAX_CAP;
-    private static final ForgeConfigSpec.DoubleValue CFG_ALLY_DISCOUNT_PER_PLAYER;
-    private static final ForgeConfigSpec.DoubleValue CFG_ALLY_DISCOUNT_MAX;
-    private static final ForgeConfigSpec.DoubleValue CFG_ALLY_SCAN_RADIUS;
-    private static final ForgeConfigSpec.DoubleValue CFG_NEXUS_DRAIN_RATE;
-    private static final ForgeConfigSpec.IntValue    CFG_NEXUS_DRAIN_INTERVAL_TICKS;
-    private static final ForgeConfigSpec.IntValue    CFG_INN_WARMUP_TICKS;
-    private static final ForgeConfigSpec.DoubleValue CFG_INN_DRAIN_RATE;
-    private static final ForgeConfigSpec.IntValue    CFG_INN_DRAIN_INTERVAL_TICKS;
-    private static final ForgeConfigSpec.IntValue    CFG_CAMPFIRE_REQUIRED_TICKS;
-    private static final ForgeConfigSpec.DoubleValue CFG_CAMPFIRE_REDUCTION;
-    private static final ForgeConfigSpec.IntValue    CFG_CAMPFIRE_COOLDOWN_TICKS;
-    private static final ForgeConfigSpec.DoubleValue CFG_BED_REDUCTION_PERCENT;
-    private static final ForgeConfigSpec.IntValue    CFG_BED_COOLDOWN_TICKS;
-    private static final ForgeConfigSpec.DoubleValue CFG_DAY_BONUS_REDUCTION;
-    private static final ForgeConfigSpec.DoubleValue CFG_ENVIRONMENTAL_FATIGUE_MULTIPLIER;
-    private static final ForgeConfigSpec.IntValue    CFG_LEVEL_COUNT;
+    private static final ModConfigSpec.DoubleValue CFG_BASE_MAX_CAP;
+    private static final ModConfigSpec.DoubleValue CFG_ALLY_DISCOUNT_PER_PLAYER;
+    private static final ModConfigSpec.DoubleValue CFG_ALLY_DISCOUNT_MAX;
+    private static final ModConfigSpec.DoubleValue CFG_ALLY_SCAN_RADIUS;
+    private static final ModConfigSpec.DoubleValue CFG_NEXUS_DRAIN_RATE;
+    private static final ModConfigSpec.IntValue    CFG_NEXUS_DRAIN_INTERVAL_TICKS;
+    private static final ModConfigSpec.IntValue    CFG_INN_WARMUP_TICKS;
+    private static final ModConfigSpec.DoubleValue CFG_INN_DRAIN_RATE;
+    private static final ModConfigSpec.IntValue    CFG_INN_DRAIN_INTERVAL_TICKS;
+    private static final ModConfigSpec.IntValue    CFG_CAMPFIRE_REQUIRED_TICKS;
+    private static final ModConfigSpec.DoubleValue CFG_CAMPFIRE_REDUCTION;
+    private static final ModConfigSpec.IntValue    CFG_CAMPFIRE_COOLDOWN_TICKS;
+    private static final ModConfigSpec.DoubleValue CFG_BED_REDUCTION_PERCENT;
+    private static final ModConfigSpec.IntValue    CFG_BED_COOLDOWN_TICKS;
+    private static final ModConfigSpec.DoubleValue CFG_DAY_BONUS_REDUCTION;
+    private static final ModConfigSpec.DoubleValue CFG_ENVIRONMENTAL_FATIGUE_MULTIPLIER;
+    private static final ModConfigSpec.IntValue    CFG_LEVEL_COUNT;
 
     // Level entries: indexed by level number (1-based)
-    private static final List<ForgeConfigSpec.DoubleValue> CFG_LEVEL_CAPACITY_INCREASE = new ArrayList<>();
-    private static final List<ForgeConfigSpec.DoubleValue> CFG_LEVEL_FATIGUE_THRESHOLD = new ArrayList<>();
+    private static final List<ModConfigSpec.DoubleValue> CFG_LEVEL_CAPACITY_INCREASE = new ArrayList<>();
+    private static final List<ModConfigSpec.DoubleValue> CFG_LEVEL_FATIGUE_THRESHOLD = new ArrayList<>();
 
     /**
      * The number of levels defined in config. The mod ships with 3 default levels.
@@ -94,7 +94,7 @@ public class RegenConfig {
     private static final int DEFAULT_LEVEL_COUNT = 3;
 
     static {
-        ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder b = new ModConfigSpec.Builder();
 
         b.comment("KMC Soulslike Regen — Common Configuration").push("general");
 

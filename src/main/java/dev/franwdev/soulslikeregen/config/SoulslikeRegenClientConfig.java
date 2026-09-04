@@ -1,15 +1,15 @@
 package dev.franwdev.soulslikeregen.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class SoulslikeRegenClientConfig {
 
-    public static final ForgeConfigSpec SPEC;
-    public static final ForgeConfigSpec.IntValue HUD_X_OFFSET;
-    public static final ForgeConfigSpec.IntValue HUD_Y_OFFSET;
+    public static final ModConfigSpec SPEC;
+    public static final ModConfigSpec.IntValue HUD_X_OFFSET;
+    public static final ModConfigSpec.IntValue HUD_Y_OFFSET;
 
     static {
-        ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder b = new ModConfigSpec.Builder();
 
         b.comment("KMC Soulslike Regen — Client Configuration").push("hud");
 
