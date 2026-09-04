@@ -16,29 +16,27 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.level.GameRules;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
-
-import dev.franwdev.soulslikeregen.capability.IRegenCap;
-import dev.franwdev.soulslikeregen.config.RegenConfig;
-import dev.franwdev.soulslikeregen.data.NexusData;
-import dev.franwdev.soulslikeregen.data.InnData;
-import dev.franwdev.soulslikeregen.compat.FTBTeamsCompat;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CampfireBlock;
-import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import dev.franwdev.soulslikeregen.api.event.FatigueResetEvent;
-import net.minecraft.world.InteractionHand;
+import dev.franwdev.soulslikeregen.capability.IRegenCap;
+import dev.franwdev.soulslikeregen.compat.FTBTeamsCompat;
+import dev.franwdev.soulslikeregen.config.RegenConfig;
+import dev.franwdev.soulslikeregen.data.InnData;
+import dev.franwdev.soulslikeregen.data.NexusData;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerWakeUpEvent;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
  * Main GameTest suite for KMC Soulslike Regen mod.
@@ -343,7 +341,7 @@ public class SoulslikeRegenGameTests {
         
         // Actually, let's just test that our FatigueResetEvent works as intended.
         FatigueResetEvent resetEvent = new FatigueResetEvent(player, FatigueResetEvent.ResetSource.WAYSTONE);
-        MinecraftForge.EVENT_BUS.post(resetEvent);
+        NeoForge.EVENT_BUS.post(resetEvent);
         
         // If not canceled, fatigue should be 0 (when called from logic)
         // But event itself doesn't reset fatigue, the logic does.
@@ -367,14 +365,14 @@ public class SoulslikeRegenGameTests {
                 event.setCanceled(true);
             }
         };
-        MinecraftForge.EVENT_BUS.register(canceller);
+        NeoForge.EVENT_BUS.register(canceller);
 
         try {
             FatigueResetEvent event = new FatigueResetEvent(player, FatigueResetEvent.ResetSource.WAYSTONE);
-            boolean canceled = MinecraftForge.EVENT_BUS.post(event);
-            TestHelpers.assertTrue(helper, canceled, "Event should be canceled by listener");
+            NeoForge.EVENT_BUS.post(event);
+            TestHelpers.assertTrue(helper, event.isCanceled(), "Event should be canceled by listener");
         } finally {
-            MinecraftForge.EVENT_BUS.unregister(canceller);
+            NeoForge.EVENT_BUS.unregister(canceller);
         }
         helper.succeed();
     }
@@ -806,7 +804,7 @@ public class SoulslikeRegenGameTests {
         try {
             RegenConfig.BED_REDUCTION_PERCENT = 0.5f;
             // Fire PlayerWakeUpEvent with wakeImmediately = false, updateLevel = true
-            MinecraftForge.EVENT_BUS.post(
+            NeoForge.EVENT_BUS.post(
                 new PlayerWakeUpEvent(player, false, true)
             );
      
@@ -832,7 +830,7 @@ public class SoulslikeRegenGameTests {
         cap.setLastBedUseTick(-1L);
  
         // Fire PlayerWakeUpEvent with wakeImmediately = true
-        MinecraftForge.EVENT_BUS.post(
+        NeoForge.EVENT_BUS.post(
             new PlayerWakeUpEvent(player, true, true)
         );
  
@@ -874,7 +872,7 @@ public class SoulslikeRegenGameTests {
         try {
             RegenConfig.BED_REDUCTION_PERCENT = 0.5f;
             // Fire PlayerWakeUpEvent
-            MinecraftForge.EVENT_BUS.post(
+            NeoForge.EVENT_BUS.post(
                 new PlayerWakeUpEvent(player, false, true)
             );
      

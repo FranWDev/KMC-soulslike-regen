@@ -17,10 +17,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraftforge.event.TickEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 /**
  * Shared test utilities for GameTest suite.
@@ -38,7 +40,7 @@ public class TestHelpers {
     public static ServerPlayer makePlayer(GameTestHelper helper, UUID uuid, String name) {
         ServerLevel level = (ServerLevel) helper.getLevel();
         GameProfile profile = new GameProfile(uuid, name);
-        ServerPlayer serverPlayer = new ServerPlayer(level.getServer(), level, profile) {
+        ServerPlayer serverPlayer = new ServerPlayer(level.getServer(), level, profile, ClientInformation.createDefault()) {
             @Override
             public boolean isSpectator() {
                 return false;
@@ -58,7 +60,7 @@ public class TestHelpers {
         private static final Connection DUMMY_CONNECTION = new Connection(PacketFlow.CLIENTBOUND);
 
         private TestNetHandler(MinecraftServer server, ServerPlayer player) {
-            super(server, DUMMY_CONNECTION, player);
+            super(server, DUMMY_CONNECTION, player, CommonListenerCookie.createInitial(player.getGameProfile(), false));
         }
 
         @Override
@@ -110,7 +112,7 @@ public class TestHelpers {
     public static void tickPlayer(ServerPlayer player, int ticks) {
         for (int i = 0; i < ticks; i++) {
             player.tickCount++;
-            PlayerTickHandler.onPlayerTick(new TickEvent.PlayerTickEvent(TickEvent.Phase.END, player));
+            PlayerTickHandler.onPlayerTick(new PlayerTickEvent.Post(player));
         }
     }
 

@@ -40,6 +40,11 @@ neoForge {
             sourceSet sourceSets.main
         }
     }
+
+    unitTest {
+        enable()
+        testedMod = mods."${mod_id}"
+    }
 }
 
 repositories {
@@ -66,10 +71,10 @@ repositories {
 }
 
 dependencies {
-    // Optional integrations from CurseMaven
-    implementation "curse.maven:waystones-${project.waystones_cf_id}"
-    implementation "curse.maven:balm-${project.balm_cf_id}"
-    implementation "curse.maven:ftb-teams-forge-${project.ftbteams_cf_id}"
+    // Optional integrations from CurseMaven (compileOnly so optional runtime dependencies aren't forced into test classpath)
+    compileOnly "curse.maven:waystones-${project.waystones_cf_id}"
+    compileOnly "curse.maven:balm-${project.balm_cf_id}"
+    compileOnly "curse.maven:ftb-teams-forge-${project.ftbteams_cf_id}"
 
     // Unit test dependencies
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'

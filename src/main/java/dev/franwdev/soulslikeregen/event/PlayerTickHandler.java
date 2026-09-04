@@ -218,7 +218,7 @@ public class PlayerTickHandler {
 
                     SoulslikeRegenNetwork.sendToClient(
                         player,
-                        new FatigueDataPacket(
+                        new FatigueDataPayload(
                             cap.getCurrentFatigue(),
                             cap.getMaxCap(),
                             cap.isExhausted(),

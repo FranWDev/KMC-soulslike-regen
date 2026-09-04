@@ -23,9 +23,20 @@ public class ResourcesValidationTest {
 
     private final Gson gson = new Gson();
 
+    private static File findProjectRoot() {
+        File current = new File(".").getAbsoluteFile();
+        while (current != null) {
+            if (new File(current, "src/main/resources").exists()) {
+                return current;
+            }
+            current = current.getParentFile();
+        }
+        return new File(".");
+    }
+
     @Test
     void testPackMcmetaExistsAndIsValid() {
-        File file = new File("src/main/resources/pack.mcmeta");
+        File file = new File(findProjectRoot(), "src/main/resources/pack.mcmeta");
         assertTrue(file.exists(), "pack.mcmeta is missing from src/main/resources/");
 
         try (FileReader reader = new FileReader(file)) {
@@ -38,7 +49,7 @@ public class ResourcesValidationTest {
             assertTrue(packObj.has("description"), "pack.mcmeta's 'pack' must contain 'description'");
 
             int packFormat = packObj.get("pack_format").getAsInt();
-            assertEquals(15, packFormat, "pack_format for Minecraft 1.20.1 must be 15");
+            assertEquals(34, packFormat, "pack_format for Minecraft 1.21.1 must be 34");
         } catch (Exception e) {
             fail("Failed to read/parse pack.mcmeta: " + e.getMessage());
         }
@@ -47,18 +58,19 @@ public class ResourcesValidationTest {
     @Test
     void testLangFilesExistAndAreValidJson() {
         String[] langFiles = {"en_us.json", "es_es.json"};
+        File root = findProjectRoot();
         for (String lang : langFiles) {
-            File file = new File("src/main/resources/assets/soulslikeregen/lang/" + lang);
+            File file = new File(root, "src/main/resources/assets/soulslikeregen/lang/" + lang);
             assertTrue(file.exists(), lang + " is missing from src/main/resources/assets/soulslikeregen/lang/");
 
             try (FileReader reader = new FileReader(file)) {
-                JsonObject root = gson.fromJson(reader, JsonObject.class);
-                assertNotNull(root, lang + " could not be parsed as a JSON object");
+                JsonObject rootObj = gson.fromJson(reader, JsonObject.class);
+                assertNotNull(rootObj, lang + " could not be parsed as a JSON object");
                 
                 // Assert that essential keys are present
-                assertTrue(root.has("msg.soulslikeregen.actionbar.normal"), lang + " is missing essential key 'msg.soulslikeregen.actionbar.normal'");
-                assertTrue(root.has("msg.soulslikeregen.actionbar.level"), lang + " is missing essential key 'msg.soulslikeregen.actionbar.level'");
-                assertTrue(root.has("msg.soulslikeregen.actionbar.exhausted"), lang + " is missing essential key 'msg.soulslikeregen.actionbar.exhausted'");
+                assertTrue(rootObj.has("msg.soulslikeregen.actionbar.normal"), lang + " is missing essential key 'msg.soulslikeregen.actionbar.normal'");
+                assertTrue(rootObj.has("msg.soulslikeregen.actionbar.level"), lang + " is missing essential key 'msg.soulslikeregen.actionbar.level'");
+                assertTrue(rootObj.has("msg.soulslikeregen.actionbar.exhausted"), lang + " is missing essential key 'msg.soulslikeregen.actionbar.exhausted'");
             } catch (Exception e) {
                 fail("Failed to parse " + lang + ": " + e.getMessage());
             }
@@ -68,7 +80,8 @@ public class ResourcesValidationTest {
     @Test
     void testJavaTranslationKeysExistInLangFiles() {
         Set<String> keysInJava = new HashSet<>();
-        File sourceDir = new File("src/main/java");
+        File root = findProjectRoot();
+        File sourceDir = new File(root, "src/main/java");
         assertTrue(sourceDir.exists(), "Source directory src/main/java does not exist");
 
         // Scan java files
@@ -79,16 +92,16 @@ public class ResourcesValidationTest {
         // Load translation files
         String[] langFiles = {"en_us.json", "es_es.json"};
         for (String langName : langFiles) {
-            File langFile = new File("src/main/resources/assets/soulslikeregen/lang/" + langName);
+            File langFile = new File(root, "src/main/resources/assets/soulslikeregen/lang/" + langName);
             assertTrue(langFile.exists(), langName + " does not exist");
 
             try (FileReader reader = new FileReader(langFile)) {
-                JsonObject root = gson.fromJson(reader, JsonObject.class);
-                assertNotNull(root, "Could not parse " + langName);
+                JsonObject rootObj = gson.fromJson(reader, JsonObject.class);
+                assertNotNull(rootObj, "Could not parse " + langName);
 
                 Set<String> missingKeys = new HashSet<>();
                 for (String key : keysInJava) {
-                    if (!root.has(key)) {
+                    if (!rootObj.has(key)) {
                         missingKeys.add(key);
                     }
                 }

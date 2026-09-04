@@ -73,7 +73,7 @@ public class FeedbackHelper {
         if (TEST_MODE || player == null || player.connection == null) {
             return false;
         }
-        Connection connection = player.connection.connection;
+        Connection connection = player.connection.getConnection();
         return connection != null && connection.channel() != null;
     }
 

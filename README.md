@@ -1,10 +1,11 @@
 # KMC Soulslike Regen
 
-A Forge 1.20.1 mod that replaces Minecraft's vanilla natural regeneration with a **Soulslike fatigue system**. Players have a regeneration capacity (maxCap) that depletes as they heal. When the capacity is exhausted, natural healing stops completely—neither healing nor food is consumed (UHC-style). Capacity recovers only through specific in-world actions: resting at a Team Nexus, staying at an Inn, using a Waystone, sleeping in a bed, or resting by a campfire.
+A NeoForge 1.21.1 mod that replaces Minecraft's vanilla natural regeneration with a **Soulslike fatigue system**. Players have a regeneration capacity (maxCap) that depletes as they heal. When the capacity is exhausted, natural healing stops completely—neither healing nor food is consumed (UHC-style). Capacity recovers only through specific in-world actions: resting at a Team Nexus, staying at an Inn, using a Waystone, sleeping in a bed, or resting by a campfire.
 
 ## Features
 
 - **Soulslike Fatigue System**: Replace vanilla regen with a Soulslike-style capacity system
+- **Modern NeoForge Architecture**: Powered by NeoForge Data Attachments, CustomPacketPayload network synchronization, and LayeredDraw client GUI
 - **Team Nexus Zones**: Designated areas where team members drain fatigue instantly
 - **Inn Zones**: Global recovery zones with warmup timer and gradual fatigue drain
 - **Waystone Integration**: Full fatigue reset when using Waystones (Waystones mod)
@@ -13,15 +14,16 @@ A Forge 1.20.1 mod that replaces Minecraft's vanilla natural regeneration with a
 - **Day Survival Bonus**: Bonus fatigue drain for going 24000 ticks without damage
 - **Bed Sleep**: Daily fatigue reduction from sleeping
 - **Ally Proximity Bonus**: Faster fatigue drain when near team members (FTB Teams integration)
-- **Admin CRUD Commands**: Complete player stat manipulation system
-- **ActionBar Status Display**: Optional persistent capacity bar display
+- **Admin CRUD Commands**: Complete player stat and zone manipulation system
+- **Modern Client HUD Overlay**: Clean graphical fatigue bar with interactive repositioning screen (`/slhud`)
+- **ActionBar Status Display**: Optional persistent capacity bar display (`/slregen bar on`)
 
 ## Installation
 
-1. Install **Forge 47.x** for Minecraft 1.20.1
-2. Place the mod JAR in your `mods/` folder
+1. Install **NeoForge 21.1.x** for Minecraft 1.21.1 with **Java 21**
+2. Place `soulslikeregen-1.21.1-neoforge-1.0.0.jar` in your `mods/` folder
 3. (Optional) Install **FTB Teams** mod for team features
-4. (Optional) Install **Waystones** mod for Waystone integration
+4. (Optional) Install **Waystones** (and **Balm**) mod for Waystone integration
 5. Launch the game
 
 ## Commands
@@ -408,11 +410,35 @@ Example:
 ```
 Output: `[SLRegen] Status bar is currently: ENABLED`
 
+### Client HUD Overlay Commands (Client-side, No OP required)
+
+Players can customize the modern graphical HUD overlay position and visibility:
+
+**Open Interactive HUD Repositioning Screen**
+```
+/slhud
+```
+Opens the in-game drag-and-drop / click configuration screen to reposition the fatigue bar anywhere on your screen.
+
+**Toggle HUD Bar Display**
+```
+/slhud toggle
+```
+Toggle the graphical HUD overlay on or off.
+
+**Reset HUD Position to Default**
+```
+/slhud reset
+```
+Reset the HUD overlay to its default position above the food bar.
+
 ---
 
 ## Configuration
 
-The mod can be configured via `config/soulslikeregen-common.toml`:
+The mod has two configuration files:
+
+1. **Common / Server Config** (`config/soulslikeregen-server.toml` / `config/soulslikeregen-common.toml`):
 
 ```toml
 [general]
@@ -439,6 +465,21 @@ fatigue_threshold = 1400.0
 [[levels]]
 capacity_increase = 30.0
 fatigue_threshold = 3000.0
+```
+
+2. **Client Config** (`config/soulslikeregen-client.toml`):
+
+```toml
+[hud]
+# Enable or disable the graphical HUD overlay
+hud_enabled = true
+# Relative screen position (0.0 = left, 1.0 = right)
+hud_x_ratio = 0.5
+# Relative screen position (0.0 = top, 1.0 = bottom)
+hud_y_ratio = 0.8
+# Pixel offset from ratio position
+hud_x_offset = 0
+hud_y_offset = -50
 ```
 
 ### Level System

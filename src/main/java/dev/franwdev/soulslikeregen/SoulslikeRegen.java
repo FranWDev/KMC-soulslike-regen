@@ -48,9 +48,9 @@ public class SoulslikeRegen {
         modBus.addListener(SoulslikeRegenNetwork::onRegisterPayloadHandlers);
 
         // Register game events on NeoForge bus
-        NeoForge.EVENT_BUS.register(new PlayerTickHandler());
-        NeoForge.EVENT_BUS.register(new DamageHandler());
-        NeoForge.EVENT_BUS.register(new ServerEventHandler());
+        NeoForge.EVENT_BUS.register(PlayerTickHandler.class);
+        NeoForge.EVENT_BUS.register(DamageHandler.class);
+        NeoForge.EVENT_BUS.register(ServerEventHandler.class);
 
         // Register commands on NeoForge bus
         NeoForge.EVENT_BUS.addListener(SoulslikeRegenCommand::onRegisterCommands);
