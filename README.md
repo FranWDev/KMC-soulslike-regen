@@ -5,7 +5,6 @@ A NeoForge 1.21.1 mod that replaces Minecraft's vanilla natural regeneration wit
 ## Features
 
 - **Soulslike Fatigue System**: Replace vanilla regen with a Soulslike-style capacity system
-- **Modern NeoForge Architecture**: Powered by NeoForge Data Attachments, CustomPacketPayload network synchronization, and LayeredDraw client GUI
 - **Team Nexus Zones**: Designated areas where team members drain fatigue instantly
 - **Inn Zones**: Global recovery zones with warmup timer and gradual fatigue drain
 - **Waystone Integration**: Full fatigue reset when using Waystones (Waystones mod)
@@ -23,7 +22,7 @@ A NeoForge 1.21.1 mod that replaces Minecraft's vanilla natural regeneration wit
 1. Install **NeoForge 21.1.x** for Minecraft 1.21.1 with **Java 21**
 2. Place `soulslikeregen-1.21.1-neoforge-1.0.0.jar` in your `mods/` folder
 3. (Optional) Install **FTB Teams** mod for team features
-4. (Optional) Install **Waystones** (and **Balm**) mod for Waystone integration
+4. (Optional) Install **Waystones** mod for Waystone integration
 5. Launch the game
 
 ## Commands
