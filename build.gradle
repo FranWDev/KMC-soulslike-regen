@@ -1,101 +1,114 @@
 plugins {
-    id 'net.minecraftforge.gradle' version '6.0.+'
-    id 'org.spongepowered.mixin' version '0.7.+'
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.78'
 }
 
-apply plugin: 'java'
+base {
+    archivesName = project.archive_name
+}
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-sourceSets {
-    test {
-        java { srcDir 'src/test/java' }
-        resources { srcDir 'src/test/resources' }
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
-minecraft {
-    mappings channel: 'official', version: minecraft_version
+neoForge {
+    version = project.neoforge_version
 
     runs {
-        server {
-            workingDirectory project.file('run')
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                soulslikeregen { source sourceSets.main }
-            }
-        }
         client {
-            workingDirectory project.file('run')
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                soulslikeregen { source sourceSets.main }
-            }
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        server {
+            server()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            programArgument '--nogui'
         }
         gameTestServer {
-            workingDirectory project.file('run-gametest')
-            property 'forge.logging.console.level', 'debug'
-            property 'forge.enabledGameTestNamespaces', 'soulslikeregen'
-            property 'soulslikeregen.testMode', 'true'
-            mods {
-                soulslikeregen {
-                    source sourceSets.main
-                    source sourceSets.test
-                }
-            }
+            server()
+            gameDirectory = project.file('run-gametest')
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'soulslikeregen.testMode', 'true'
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
         }
     }
 }
 
 repositories {
-    maven { url 'https://maven.minecraftforge.net' }
-    maven { url 'https://maven.architectury.dev/' }
-    maven { url 'https://maven.ftb.dev/releases' }
-    maven { url 'https://maven.saps.dev/minecraft' }
-    maven { url 'https://maven.twelveiterations.com/repository/maven-public/' }
-    maven { url 'https://maven.blamejared.com' }
-    maven { url 'https://modmaven.dev' }
-    maven { url 'https://api.modrinth.com/maven' }
+    mavenLocal()
     mavenCentral()
+    maven {
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
+    maven {
+        name = 'NeoForged'
+        url = 'https://maven.neoforged.net/releases'
+    }
+    maven { url = 'https://maven.architectury.dev/' }
+    maven { url = 'https://maven.ftb.dev/releases' }
+    maven { url = 'https://maven.saps.dev/minecraft' }
+    maven { url = 'https://maven.twelveiterations.com/repository/maven-public/' }
+    maven { url = 'https://maven.blamejared.com' }
+    maven { url = 'https://modmaven.dev' }
+    maven { url = 'https://api.modrinth.com/maven' }
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    // Optional integrations from CurseMaven
+    implementation "curse.maven:waystones-${project.waystones_cf_id}"
+    implementation "curse.maven:balm-${project.balm_cf_id}"
+    implementation "curse.maven:ftb-teams-forge-${project.ftbteams_cf_id}"
 
-    // Mixin annotation processor for refmap generation
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-
-    // Optional: FTB Teams
-    compileOnly fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftbteams_version}")
-
-    // Optional: Waystones (depends on Balm)
-    compileOnly fg.deobf("maven.modrinth:balm:${balm_version}")
-    compileOnly fg.deobf("maven.modrinth:waystones:${waystones_version}")
-
-    // Test dependencies
+    // Unit test dependencies
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
-    testCompileOnly fg.deobf("dev.ftb.mods:ftb-teams-forge:${ftbteams_version}")
 }
 
-jar {
+tasks.withType(ProcessResources).configureEach {
+    var replaceProperties = [
+        minecraft_version: minecraft_version,
+        neoforge_version : neoforge_version,
+        mod_id           : mod_id,
+        mod_name         : mod_name,
+        mod_license      : mod_license,
+        version          : version,
+        mod_author       : mod_author
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties
+    }
+}
+
+tasks.named('jar', Jar) {
+    archiveBaseName = project.archive_name
     manifest {
         attributes([
             'Specification-Title'   : mod_id,
-            'Implementation-Title'  : mod_id,
-            'Implementation-Version': version,
-            'MixinConfigs'          : 'soulslikeregen.mixins.json'
+            'Specification-Vendor'  : mod_author,
+            'Specification-Version' : '1',
+            'Implementation-Title'  : mod_name,
+            'Implementation-Version': project.version,
+            'Implementation-Vendor' : mod_author
         ])
     }
     exclude 'dev/franwdev/soulslikeregen/gametest/**'
     exclude 'dev/franwdev/soulslikeregen/unit/**'
 }
 
-mixin {
-    add sourceSets.main, 'soulslikeregen.refmap.json'
-    config 'soulslikeregen.mixins.json'
-}
-
-test {
+tasks.named('test', Test) {
     useJUnitPlatform()
     exclude '**/gametest/**'
 }
