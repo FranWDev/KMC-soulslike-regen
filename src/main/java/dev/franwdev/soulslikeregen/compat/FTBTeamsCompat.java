@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

@@ -1,20 +1,20 @@
 package dev.franwdev.soulslikeregen.compat;
 
-import net.blay09.mods.waystones.api.WaystoneActivatedEvent;
-import net.blay09.mods.waystones.block.WaystoneBlockBase;
-import net.blay09.mods.waystones.block.PortstoneBlock;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.level.block.Block;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-
+import dev.franwdev.soulslikeregen.api.event.FatigueResetEvent;
 import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
 import dev.franwdev.soulslikeregen.feedback.FeedbackHelper;
 import dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper;
-import dev.franwdev.soulslikeregen.api.event.FatigueResetEvent;
+import net.blay09.mods.balm.api.Balm;
+import net.blay09.mods.waystones.api.event.WaystoneActivatedEvent;
+import net.blay09.mods.waystones.block.PortstoneBlock;
+import net.blay09.mods.waystones.block.WaystoneBlockBase;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.block.Block;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 public class WaystonesCompat {
 
@@ -23,7 +23,15 @@ public class WaystonesCompat {
     }
 
     public static void init() {
-        MinecraftForge.EVENT_BUS.register(new WaystonesListener());
+        // Subscribe to Balm's WaystoneActivatedEvent
+        Balm.getEvents().onEvent(WaystoneActivatedEvent.class, event -> {
+            if (event.getPlayer() instanceof ServerPlayer player) {
+                applyWaystoneHeal(player);
+            }
+        });
+
+        // Register right-click block interaction listener on NeoForge event bus
+        NeoForge.EVENT_BUS.register(new WaystonesRightClickListener());
     }
 
     private static void applyWaystoneHeal(ServerPlayer player) {
@@ -37,7 +45,7 @@ public class WaystonesCompat {
 
             if (cap.getCurrentFatigue() > 0) {
                 FatigueResetEvent event = new FatigueResetEvent(player, FatigueResetEvent.ResetSource.WAYSTONE);
-                if (MinecraftForge.EVENT_BUS.post(event)) {
+                if (NeoForge.EVENT_BUS.post(event).isCanceled()) {
                     return; // Canceled by another mod
                 }
 
@@ -49,14 +57,7 @@ public class WaystonesCompat {
         });
     }
 
-    private static class WaystonesListener {
-        @SubscribeEvent
-        public void onWaystoneActivated(WaystoneActivatedEvent event) {
-            if (event.getPlayer() instanceof ServerPlayer player) {
-                applyWaystoneHeal(player);
-            }
-        }
-
+    private static class WaystonesRightClickListener {
         @SubscribeEvent
         public void onBlockRightClick(PlayerInteractEvent.RightClickBlock event) {
             if (event.getSide().isServer() && event.getEntity() instanceof ServerPlayer player) {
