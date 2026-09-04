@@ -1,9 +1,12 @@
 package dev.franwdev.soulslikeregen.capability;
 
-import dev.franwdev.soulslikeregen.config.RegenConfig;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.neoforged.neoforge.common.util.INBTSerializable;
 
-public class RegenCap implements IRegenCap {
+import dev.franwdev.soulslikeregen.config.RegenConfig;
+
+public class RegenCap implements IRegenCap, INBTSerializable<CompoundTag> {
 
     private float currentFatigue = 0.0f;
     private float maxCap;             // initialized to RegenConfig.BASE_MAX_CAP on first access
@@ -30,7 +33,7 @@ public class RegenCap implements IRegenCap {
 
     public RegenCap() {
         // maxCap is set from config at construction time.
-        // If config is not baked yet (early init), it defaults to 40.0.
+        // If config is not baked yet (early init), it defaults to 80.0.
         this.maxCap = RegenConfig.BASE_MAX_CAP > 0 ? RegenConfig.BASE_MAX_CAP : 80.0f;
     }
 
@@ -92,9 +95,10 @@ public class RegenCap implements IRegenCap {
     @Override public float getEnvironmentalDamageBuffer() { return environmentalDamageBuffer; }
     @Override public void setEnvironmentalDamageBuffer(float v) { environmentalDamageBuffer = Math.max(0, v); }
 
-    // ── NBT Persistence ──────────────────────────────────────────────────────
+    // ── INBTSerializable implementation ──────────────────────────────────────
 
-    public CompoundTag serializeNBT() {
+    @Override
+    public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag tag = new CompoundTag();
         tag.putFloat("currentFatigue",       currentFatigue);
         tag.putFloat("maxCap",               maxCap);
@@ -111,7 +115,8 @@ public class RegenCap implements IRegenCap {
         return tag;
     }
 
-    public void deserializeNBT(CompoundTag tag) {
+    @Override
+    public void deserializeNBT(HolderLookup.Provider provider, CompoundTag tag) {
         currentFatigue       = tag.getFloat("currentFatigue");
         maxCap               = tag.contains("maxCap") ? tag.getFloat("maxCap") : RegenConfig.BASE_MAX_CAP;
         totalFatigueSpent    = tag.getFloat("totalFatigueSpent");
@@ -122,5 +127,13 @@ public class RegenCap implements IRegenCap {
         lastBedUseTick       = tag.contains("lastBedUseTick")      ? tag.getLong("lastBedUseTick")      : -1L;
         lastWaystoneUseTick  = tag.contains("lastWaystoneUseTick") ? tag.getLong("lastWaystoneUseTick") : -1L;
         actionBarEnabled     = tag.contains("actionBarEnabled")    ? tag.getBoolean("actionBarEnabled")    : false;
+    }
+
+    public CompoundTag serializeNBT() {
+        return serializeNBT(null);
+    }
+
+    public void deserializeNBT(CompoundTag tag) {
+        deserializeNBT(null, tag);
     }
 }

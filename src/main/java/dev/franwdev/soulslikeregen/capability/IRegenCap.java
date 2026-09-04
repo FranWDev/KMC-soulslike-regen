@@ -1,6 +1,5 @@
 package dev.franwdev.soulslikeregen.capability;
 
-import javax.annotation.Nonnull;
 
 public interface IRegenCap {
 
