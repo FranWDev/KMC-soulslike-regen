@@ -1,5 +1,6 @@
 package dev.franwdev.soulslikeregen.data;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -22,15 +23,14 @@ public class InnData extends SavedData {
 
     public static InnData get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(
-            InnData::load,
-            InnData::new,
+            new SavedData.Factory<>(InnData::new, InnData::load, null),
             FILE_NAME
         );
     }
 
     public InnData() {}
 
-    public static InnData load(CompoundTag tag) {
+    public static InnData load(CompoundTag tag, HolderLookup.Provider provider) {
         InnData data = new InnData();
         data.nextId = tag.getInt("nextId");
         if (tag.contains("inns", Tag.TAG_LIST)) {
@@ -43,8 +43,12 @@ public class InnData extends SavedData {
         return data;
     }
 
+    public static InnData load(CompoundTag tag) {
+        return load(tag, null);
+    }
+
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
         tag.putInt("nextId", nextId);
         ListTag list = new ListTag();
         for (InnEntry entry : inns.values()) {
@@ -52,6 +56,10 @@ public class InnData extends SavedData {
         }
         tag.put("inns", list);
         return tag;
+    }
+
+    public CompoundTag save(CompoundTag tag) {
+        return save(tag, null);
     }
 
     public InnEntry addInn(String name, double x, double y, double z, double radius, ResourceKey<Level> dimension) {

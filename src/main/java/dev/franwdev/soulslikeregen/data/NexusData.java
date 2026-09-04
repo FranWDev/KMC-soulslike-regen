@@ -1,5 +1,6 @@
 package dev.franwdev.soulslikeregen.data;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -23,15 +24,14 @@ public class NexusData extends SavedData {
 
     public static NexusData get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(
-            NexusData::load,
-            NexusData::new,
+            new SavedData.Factory<>(NexusData::new, NexusData::load, null),
             FILE_NAME
         );
     }
 
     public NexusData() {}
 
-    public static NexusData load(CompoundTag tag) {
+    public static NexusData load(CompoundTag tag, HolderLookup.Provider provider) {
         NexusData data = new NexusData();
         data.nextId = tag.getInt("nextId");
         if (tag.contains("nexuses", Tag.TAG_LIST)) {
@@ -44,8 +44,12 @@ public class NexusData extends SavedData {
         return data;
     }
 
+    public static NexusData load(CompoundTag tag) {
+        return load(tag, null);
+    }
+
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
         tag.putInt("nextId", nextId);
         ListTag list = new ListTag();
         for (NexusEntry entry : nexuses.values()) {
@@ -53,6 +57,10 @@ public class NexusData extends SavedData {
         }
         tag.put("nexuses", list);
         return tag;
+    }
+
+    public CompoundTag save(CompoundTag tag) {
+        return save(tag, null);
     }
 
     public NexusEntry addNexus(double x, double y, double z, double radius, ResourceKey<Level> dimension, UUID teamId, String teamName) {

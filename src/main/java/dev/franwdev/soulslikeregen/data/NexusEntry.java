@@ -39,7 +39,7 @@ public record NexusEntry(
         double radius = tag.getDouble("radius");
         ResourceKey<Level> dim = ResourceKey.create(
             Registries.DIMENSION,
-            new ResourceLocation(tag.getString("dimension"))
+            ResourceLocation.parse(tag.getString("dimension"))
         );
         UUID teamId = tag.getUUID("teamId");
         String teamName = tag.getString("teamName");

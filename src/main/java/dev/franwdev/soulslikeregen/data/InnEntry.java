@@ -36,7 +36,7 @@ public record InnEntry(
         double radius = tag.getDouble("radius");
         ResourceKey<Level> dim = ResourceKey.create(
             Registries.DIMENSION,
-            new ResourceLocation(tag.getString("dimension"))
+            ResourceLocation.parse(tag.getString("dimension"))
         );
         return new InnEntry(id, name, x, y, z, radius, dim);
     }
