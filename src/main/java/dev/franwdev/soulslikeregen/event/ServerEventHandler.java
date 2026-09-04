@@ -1,24 +1,15 @@
 package dev.franwdev.soulslikeregen.event;
 
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CampfireBlock;
-import net.minecraft.world.level.block.state.BlockState;
-
-import dev.franwdev.soulslikeregen.SoulslikeRegen;
 import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
 import dev.franwdev.soulslikeregen.config.RegenConfig;
 import dev.franwdev.soulslikeregen.feedback.FeedbackHelper;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerWakeUpEvent;
 
-@Mod.EventBusSubscriber(modid = SoulslikeRegen.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ServerEventHandler {
 
     @SubscribeEvent
@@ -26,12 +17,13 @@ public class ServerEventHandler {
         Player oldPlayer = event.getOriginal();
         Player newPlayer = event.getEntity();
 
-        oldPlayer.reviveCaps();
+        // Note: Data Attachments configured with copyOnDeath() automatically persist
+        // across deaths. We keep explicit sync for dimension travel / edge cases.
         RegenCapProvider.get(oldPlayer).ifPresent(oldCap -> {
             RegenCapProvider.get(newPlayer).ifPresent(newCap -> {
                 newCap.setCurrentFatigue(oldCap.getCurrentFatigue());
                 newCap.setMaxCap(oldCap.getMaxCap());
-                newCap.addFatigueSpent(oldCap.getTotalFatigueSpent());
+                newCap.setTotalFatigueSpent(oldCap.getTotalFatigueSpent());
                 newCap.setCurrentLevel(oldCap.getCurrentLevel());
                 newCap.setLastDamageTick(oldCap.getLastDamageTick());
                 newCap.setBonusClaimed(oldCap.isBonusClaimed());
@@ -41,7 +33,6 @@ public class ServerEventHandler {
                 newCap.setActionBarEnabled(oldCap.isActionBarEnabled());
             });
         });
-        oldPlayer.invalidateCaps();
     }
 
     @SubscribeEvent

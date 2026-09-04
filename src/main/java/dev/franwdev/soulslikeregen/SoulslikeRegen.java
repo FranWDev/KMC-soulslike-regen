@@ -1,36 +1,33 @@
 package dev.franwdev.soulslikeregen;
 
 import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
+import dev.franwdev.soulslikeregen.client.ClientForgeEventHandler;
 import dev.franwdev.soulslikeregen.command.SoulslikeRegenCommand;
 import dev.franwdev.soulslikeregen.compat.FTBTeamsCompat;
 import dev.franwdev.soulslikeregen.compat.WaystonesCompat;
 import dev.franwdev.soulslikeregen.config.RegenConfig;
 import dev.franwdev.soulslikeregen.config.SoulslikeRegenClientConfig;
-import dev.franwdev.soulslikeregen.client.ClientForgeEventHandler;
 import dev.franwdev.soulslikeregen.event.DamageHandler;
 import dev.franwdev.soulslikeregen.event.PlayerTickHandler;
 import dev.franwdev.soulslikeregen.event.ServerEventHandler;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import dev.franwdev.soulslikeregen.network.SoulslikeRegenNetwork;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.common.NeoForge;
 
 @Mod(SoulslikeRegen.MODID)
 public class SoulslikeRegen {
 
     public static final String MODID = "soulslikeregen";
 
-    public SoulslikeRegen() {
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-
+    public SoulslikeRegen(IEventBus modBus, ModContainer modContainer) {
         // Register configs
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, RegenConfig.SPEC, "soulslikeregen-common.toml");
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, SoulslikeRegenClientConfig.SPEC, "soulslikeregen-client.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, RegenConfig.SPEC, "soulslikeregen-common.toml");
+        modContainer.registerConfig(ModConfig.Type.CLIENT, SoulslikeRegenClientConfig.SPEC, "soulslikeregen-client.toml");
 
         // Bake config values on loading and reloading events
         modBus.addListener((ModConfigEvent.Loading event) -> {
@@ -44,26 +41,23 @@ public class SoulslikeRegen {
             }
         });
 
-        // Register capability events on mod bus
-        modBus.addListener(RegenCapProvider::onRegisterCapabilities);
-        
-        // Register common setup for network initialization
-        modBus.addListener((net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) -> {
-            event.enqueueWork(dev.franwdev.soulslikeregen.network.SoulslikeRegenNetwork::init);
-        });
+        // Register attachment types on mod bus
+        RegenCapProvider.ATTACHMENT_TYPES.register(modBus);
 
-        // Register game events on forge bus
-        MinecraftForge.EVENT_BUS.register(new PlayerTickHandler());
-        MinecraftForge.EVENT_BUS.register(new DamageHandler());
-        MinecraftForge.EVENT_BUS.register(new ServerEventHandler());
-        MinecraftForge.EVENT_BUS.register(new RegenCapProvider());  // AttachCapabilitiesEvent
+        // Register network payloads on mod bus
+        modBus.addListener(SoulslikeRegenNetwork::onRegisterPayloadHandlers);
 
-        // Register commands
-        MinecraftForge.EVENT_BUS.addListener(SoulslikeRegenCommand::onRegisterCommands);
+        // Register game events on NeoForge bus
+        NeoForge.EVENT_BUS.register(new PlayerTickHandler());
+        NeoForge.EVENT_BUS.register(new DamageHandler());
+        NeoForge.EVENT_BUS.register(new ServerEventHandler());
+
+        // Register commands on NeoForge bus
+        NeoForge.EVENT_BUS.addListener(SoulslikeRegenCommand::onRegisterCommands);
 
         // Register client commands only on physical client
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            MinecraftForge.EVENT_BUS.register(ClientForgeEventHandler.class);
+        if (FMLEnvironment.dist.isClient()) {
+            NeoForge.EVENT_BUS.register(ClientForgeEventHandler.class);
         }
 
         // Optional integrations — guard with isLoaded checks

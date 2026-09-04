@@ -2,44 +2,39 @@ package dev.franwdev.soulslikeregen.event;
 
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
-import dev.franwdev.soulslikeregen.SoulslikeRegen;
 import dev.franwdev.soulslikeregen.capability.IRegenCap;
 import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
 import dev.franwdev.soulslikeregen.compat.FTBTeamsCompat;
 import dev.franwdev.soulslikeregen.config.RegenConfig;
 import dev.franwdev.soulslikeregen.client.FatigueClientData.RecoveryType;
-import dev.franwdev.soulslikeregen.network.FatigueDataPacket;
+import dev.franwdev.soulslikeregen.network.FatigueDataPayload;
 import dev.franwdev.soulslikeregen.network.SoulslikeRegenNetwork;
 import dev.franwdev.soulslikeregen.data.InnData;
 import dev.franwdev.soulslikeregen.data.InnEntry;
 import dev.franwdev.soulslikeregen.data.NexusData;
 import dev.franwdev.soulslikeregen.data.NexusEntry;
 import dev.franwdev.soulslikeregen.feedback.FeedbackHelper;
+import dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper;
 import dev.franwdev.soulslikeregen.level.LevelUpHandler;
 
-@Mod.EventBusSubscriber(modid = SoulslikeRegen.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class PlayerTickHandler {
 
     private static final int FULLY_RESTED_MSG_COOLDOWN_TICKS = 1200; // 60 s
 
     @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.side != LogicalSide.SERVER || event.phase != TickEvent.Phase.END) {
-            return;
-        }
-
-        if (event.player instanceof ServerPlayer player) {
+    public static void onPlayerTick(PlayerTickEvent.Post event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            if (player.level().isClientSide()) {
+                return;
+            }
             ServerLevel level = player.serverLevel();
             RegenCapProvider.get(player).ifPresent(cap -> {
 
@@ -132,7 +127,7 @@ public class PlayerTickHandler {
                     if (player.tickCount % RegenConfig.NEXUS_DRAIN_INTERVAL_TICKS == 0) {
                         float drained = cap.drainFatigue(RegenConfig.NEXUS_DRAIN_RATE);
                         if (drained > 0 && cap.getCurrentFatigue() == 0 && cap.getFullyRestedMessageCooldown() == 0) {
-                            FeedbackHelper.sendFullyRested(player, dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.source.nexus"));
+                            FeedbackHelper.sendFullyRested(player, ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.source.nexus"));
                             cap.setFullyRestedMessageCooldown(FULLY_RESTED_MSG_COOLDOWN_TICKS);
                         }
                     }
@@ -158,7 +153,7 @@ public class PlayerTickHandler {
                         if (player.tickCount % RegenConfig.INN_DRAIN_INTERVAL_TICKS == 0) {
                             float drained = cap.drainFatigue(RegenConfig.INN_DRAIN_RATE);
                             if (drained > 0 && cap.getCurrentFatigue() == 0 && cap.getFullyRestedMessageCooldown() == 0) {
-                                FeedbackHelper.sendFullyRested(player, dev.franwdev.soulslikeregen.feedback.ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.source.inn"));
+                                FeedbackHelper.sendFullyRested(player, ServerTranslationHelper.getComponent(player, "msg.soulslikeregen.source.inn"));
                                 cap.setFullyRestedMessageCooldown(FULLY_RESTED_MSG_COOLDOWN_TICKS);
                             }
                         }
