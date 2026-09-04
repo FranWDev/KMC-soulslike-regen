@@ -1,9 +1,7 @@
 package dev.franwdev.soulslikeregen.mixin;
 
 import dev.franwdev.soulslikeregen.capability.RegenCapProvider;
-import dev.franwdev.soulslikeregen.feedback.FeedbackHelper;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,14 +22,14 @@ public abstract class MixinFoodData {
      * This is correct: there is no point spending food on a heal that will never happen.
      */
     @Inject(
-        method = "tick(Lnet/minecraft/world/entity/player/Player;)V",
+        method = "tick(Lnet/minecraft/server/level/ServerPlayer;)V",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/world/entity/player/Player;heal(F)V"
+            target = "Lnet/minecraft/server/level/ServerPlayer;heal(F)V"
         ),
         cancellable = true
     )
-    private void soulslikeregen$interceptHeal(Player tickPlayer, CallbackInfo ci) {
+    private void soulslikeregen$interceptHeal(ServerPlayer tickPlayer, CallbackInfo ci) {
         // Use the method parameter directly — no @Shadow needed
         RegenCapProvider.get(tickPlayer).ifPresent(cap -> {
             if (cap.isExhausted()) {
