@@ -1,6 +1,7 @@
 package dev.franwdev.soulslikeregen.command;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,8 +25,8 @@ import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import dev.franwdev.soulslikeregen.api.event.FatigueResetEvent;
 import dev.franwdev.soulslikeregen.capability.IRegenCap;
@@ -895,7 +896,7 @@ public class SoulslikeRegenCommand {
         if (player == null) return 0;
 
         FatigueResetEvent event = new FatigueResetEvent(player, FatigueResetEvent.ResetSource.COMMAND);
-        if (MinecraftForge.EVENT_BUS.post(event)) {
+        if (NeoForge.EVENT_BUS.post(event).isCanceled()) {
             src.sendFailure(Component.literal("[SLRegen] Reset was canceled by another mod."));
             return 0;
         }
@@ -979,35 +980,43 @@ public class SoulslikeRegenCommand {
     @SuppressWarnings("unchecked")
     private static ArgumentType<Object> getVec3Argument() {
         try {
-            Class<?> clazz = Class.forName("net.minecraft.commands.arguments.coordinates.Vec3Argument");
-            for (Method method : clazz.getMethods()) {
-                if (java.lang.reflect.Modifier.isStatic(method.getModifiers()) &&
-                    method.getParameterCount() == 0 &&
-                    ArgumentType.class.isAssignableFrom(method.getReturnType())) {
-                    return (ArgumentType<Object>) method.invoke(null);
+            return (ArgumentType<Object>) (Object) Vec3Argument.vec3();
+        } catch (Throwable t) {
+            try {
+                Class<?> clazz = Vec3Argument.class;
+                for (Method method : clazz.getMethods()) {
+                    if (Modifier.isStatic(method.getModifiers()) &&
+                        method.getParameterCount() == 0 &&
+                        ArgumentType.class.isAssignableFrom(method.getReturnType())) {
+                        return (ArgumentType<Object>) method.invoke(null);
+                    }
                 }
+                throw new NoSuchMethodException("No static factory method returning ArgumentType found on Vec3Argument");
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to get Vec3Argument via signature reflection", e);
             }
-            throw new NoSuchMethodException("No static factory method returning ArgumentType found on Vec3Argument");
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get Vec3Argument via signature reflection", e);
         }
     }
 
     private static Vec3 getVec3Coord(CommandContext<CommandSourceStack> ctx, String name) {
         try {
-            Class<?> clazz = Class.forName("net.minecraft.commands.arguments.coordinates.Vec3Argument");
-            for (Method method : clazz.getMethods()) {
-                if (java.lang.reflect.Modifier.isStatic(method.getModifiers()) &&
-                    method.getParameterCount() == 2 &&
-                    method.getParameterTypes()[0].equals(CommandContext.class) &&
-                    method.getParameterTypes()[1].equals(String.class) &&
-                    Vec3.class.isAssignableFrom(method.getReturnType())) {
-                    return (Vec3) method.invoke(null, ctx, name);
+            return Vec3Argument.getVec3(ctx, name);
+        } catch (Throwable t) {
+            try {
+                Class<?> clazz = Vec3Argument.class;
+                for (Method method : clazz.getMethods()) {
+                    if (Modifier.isStatic(method.getModifiers()) &&
+                        method.getParameterCount() == 2 &&
+                        method.getParameterTypes()[0].equals(CommandContext.class) &&
+                        method.getParameterTypes()[1].equals(String.class) &&
+                        Vec3.class.isAssignableFrom(method.getReturnType())) {
+                        return (Vec3) method.invoke(null, ctx, name);
+                    }
                 }
+                throw new NoSuchMethodException("No static retriever method returning Vec3 found on Vec3Argument");
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to get Vec3 via signature reflection", e);
             }
-            throw new NoSuchMethodException("No static retriever method returning Vec3 found on Vec3Argument");
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get Vec3 via signature reflection", e);
         }
     }
 
